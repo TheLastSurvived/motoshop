@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}
+{{article.title}}
+{% endblock %}
+
+{% block main %}
+{{ ckeditor.load() }}
+    <main>
+      <div class="container">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Главная</a></li>
+            <li class="breadcrumb-item"><a href="/catalog">Каталог</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{article.title}}</li>
+          </ol>
+        </nav>
+
+
+        {%if 'name' in session and active_user.root==1%}
+    <button
+      type="button"
+      class="btn btn-warning mb-3"
+      data-bs-toggle="modal"
+      data-bs-target="#exampleModal"
+    >
+      Изменить
+    </button>
+    <a href="/delete-article/{{article.id}}" class="btn btn-danger mb-3">Удалить</a>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Изменить запись</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form method="post" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label for="disabledTextInput" class="form-label">Название</label>
+                <input type="text" value="{{article.title}}" id="disabledTextInput" class="form-control" name="title" placeholder="Название"
+                  required>
+              </div>
+              <div class="mb-3">
+                <label for="disabledTextInput" class="form-label">Категория</label>
+                <input type="text" value="{{article.category}}" id="disabledTextInput" class="form-control" name="category" placeholder="Категория"
+                  required>
+              </div>
+  
+              <div class="mb-3">
+                <label for="disabledTextInput" class="form-label">Цена</label>
+                <input type="number" value="{{article.price}}" id="disabledTextInput" class="form-control" name="price" placeholder="Цена"
+                  required>
+              </div>
+        
+              <div class="mb-3">
+                <label for="disabledTextInput" class="form-label">Изображение</label>
+                <input type="file" id="disabledTextInput" name="image" class="form-control" accept=".jpg,.jpeg,.png"
+                  >
+              </div>
+              <div class="mb-3">
+                <h3>Содержимое</h3>
+                {{ ckeditor.create(value=article.text) }}
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            <button type="submit" class="btn btn-primary">Изменить запись</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {%endif%}
+    {% with messages = get_flashed_messages(True) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <p class="m-2 flash {{category}}">{{message}}</p>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+        <div class="row">
+          <div class="col-md-4">
+            <img src="../static/img/upload/{{article.image_name}}" width="100%" alt="{{article.title}}" />
+         
+       
+          </div>
+          <div class="col-md-8">
+            <h1>{{article.title}}</h1>
+            <h4>{{article.price}} руб.</h4>
+            {%if 'name' in session %}
+            <button type="button" class="btn btn-success my-2"   data-bs-toggle="modal"
+            data-bs-target="#exampleModal2">Заказать</button>
+
+            <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Введите адрес доставки</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form method="post" action="{{url_for('add_order', id_user=active_user.id, id_article=article.id)}}">
+                      <div class="mb-3">
+                        <label for="disabledTextInput" class="form-label">Адрес</label>
+                        <input type="text" id="disabledTextInput" class="form-control" name="address" placeholder="Адрес"
+                          required>
+                      </div>
+                    
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="submit" class="btn btn-primary">Заказать</button>
+                  </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {%else%}
+            <p>Для заказа необходимо <a href="/reg">зарегистрироваться!</a> </p>
+            {%endif%}
+            {% autoescape false %} {{article.text}} {% endautoescape %}
+          </div>
+        </div>
+      </div>
+    </main>
+
+    {% endblock %}

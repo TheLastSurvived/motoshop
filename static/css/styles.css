@@ -1,0 +1,50 @@
+.icon{
+    width: 50px;
+    margin-right: 10px;
+}
+
+html{
+  height: 100%;
+}
+body{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #ffff;
+    border-radius: 30px;
+}
+
+main{
+  flex: 1 0 auto;
+}
+
+footer{
+  flex: 0 0 auto;
+}
+
+.carousel-item{
+  background-color: black;
+}
+
+.carousel-item img{
+  opacity: 0.5;
+}
+
+
+.review{
+  border-radius: 50%;
+}
+
+.form{
+  margin-top: 20px;
+}
+
+.flash.ok {
+  color: #198754;
+  font-weight: bold;
+}
+
+.flash.bad {
+  color: #dc3545;
+  font-weight: bold;
+}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}
+Профиль
+{% endblock %}
+
+
+{% block main %}
+
+
+    <main>
+      <div class="container">
+
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Главная</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Профиль</li>
+          </ol>
+        </nav>
+        <div class="row">
+          {% with messages = get_flashed_messages(True) %}
+          {% if messages %}
+          {% for category, message in messages %}
+          <p class="my-1 flash {{category}}">{{message}}</p>
+          {% endfor %}
+          {% endif %}
+          {% endwith %}
+            <div class="col-md-4">
+                <h1>Мои данные</h1>
+                <h3>{{active_user.name}} {{active_user.surname}}</h3>
+                <small>{{active_user.email}}</small>
+            </div>
+            <div class="col-md-8">
+                <h1>Мои заказы</h1>
+                {%if not orders%}
+                <p>Список пуст!</p>
+              {%else%}
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Номер</th>
+                      <th scope="col">Название заказа</th>
+                      <th scope="col">Адрес</th>
+                      <th scope="col">Дата заказа</th>
+                      <th scope="col">*</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {%for order in orders%}
+                    <tr>
+                      <th>{{order.id}}</th>
+                      <th><a href="/article/{{order.article.id}}">{{order.article.title}}</a></th>
+                      <td>{{order.address}}</td>
+                      <td>{{order.date.strftime('%d.%m.%Y %H:%M')}}</td>
+                      <td><a href="/delete-order/{{order.id}}" class="btn btn-danger">Удалить</a></td>
+                    </tr>
+                    {%endfor%}
+                  </tbody>
+                </table>
+                {%endif%}
+            </div>
+        </div>
+       
+        
+      </div>
+    </main>
+
+    {% endblock %}

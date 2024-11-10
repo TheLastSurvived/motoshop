@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}
+Каталог
+{% endblock %}
+
+{% block main %}
+{{ ckeditor.load() }}
+    <main>
+      <div class="container">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Главная</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Каталог</li>
+          </ol>
+        </nav>
+
+        {%if 'name' in session and active_user.root==1%}
+    <button
+    type="button"
+    class="btn btn-primary mb-3"
+    data-bs-toggle="modal"
+    data-bs-target="#exampleModal"
+  >
+    Добавить запись
+  </button>
+
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить запись</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="disabledTextInput" class="form-label">Название</label>
+              <input type="text" id="disabledTextInput" class="form-control" name="title" placeholder="Название"
+                required>
+            </div>
+            <div class="mb-3">
+              <label for="disabledTextInput" class="form-label">Категория</label>
+              <input type="text" id="disabledTextInput" class="form-control" name="category" placeholder="Категория"
+                required>
+            </div>
+
+            <div class="mb-3">
+              <label for="disabledTextInput" class="form-label">Цена</label>
+              <input type="number" id="disabledTextInput" class="form-control" name="price" placeholder="Цена"
+                required>
+            </div>
+      
+            <div class="mb-3">
+              <label for="disabledTextInput" class="form-label">Изображение</label>
+              <input type="file" id="disabledTextInput" name="image" class="form-control" accept=".jpg,.jpeg,.png"
+                required>
+            </div>
+            <div class="mb-3">
+              <h3>Содержимое</h3>
+              {{ ckeditor.create() }}
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-primary">Добавить запись</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {%endif%}
+  {% with messages = get_flashed_messages(True) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <p class="m-2 flash {{category}}">{{message}}</p>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+  <div class="nav-scroller py-1 mb-3 border-bottom">
+    <h2>Категории:</h2>
+    <nav class="nav nav-underline">
+        <a class="nav-item nav-link link-body-emphasis " href="/catalog">Все</a>
+        {%for category in articles_category%}    
+        <a class="nav-item nav-link link-body-emphasis" href="/catalog?category={{category.category}}">{{category.category}}</a>
+        {%endfor%}
+    </nav>
+</div>
+{%if not articles%}
+  <h1>Каталог пуст!</h1>
+{%endif%}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+          
+{%for article in articles%}
+          <div class="col">
+            <div class="card shadow-sm">
+              <a href="/article/{{article.id}}">
+                <img src="../static/img/upload/{{article.image_name}}" width="100%" alt="" />
+              </a>
+
+              <div class="card-body">
+                <p class="card-text">{{article.title}}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="btn-group">
+                    <a
+                      href="/article/{{article.id}}"
+                      class="btn btn-sm btn-outline-secondary"
+                      >Просмотр</a
+                    >
+                  </div>
+                  <small class="text-body-secondary">{{article.price}} руб.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+{%endfor%}
+
+        </div>
+      </div>
+    </main>
+
+    {% endblock %}
