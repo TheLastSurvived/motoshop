@@ -48,3 +48,12 @@ footer{
   color: #dc3545;
   font-weight: bold;
 }
+
+body {
+  background-color: #e3e6fc;
+}
+
+.wrapper {
+  background-color: #ffff;
+  border-radius: 30px;
+}
