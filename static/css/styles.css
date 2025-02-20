@@ -49,11 +49,10 @@ footer{
   font-weight: bold;
 }
 
-body {
-  background-color: #e3e6fc;
+
+.error-page{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.wrapper {
-  background-color: #ffff;
-  border-radius: 30px;
-}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}
+Перенаправление
+{% endblock %}
+
+{% block main %}
+<div class="container my-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Главная</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Перенаправление</li>
+        </ol>
+      </nav>
+      <h1 class="text-center">Перенаправление на оплату</h1>
+</div>
+<script>
+    // Открытие нового окна с нужным URL
+    window.onload = function() {
+        window.open('{{link}}', '_blank'); // Замените на нужный URL
+        window.location.href = '/article/{{id_article}}';  //Перенаправление обратно на главную страницу
+    };
+</script>
+{% endblock %}

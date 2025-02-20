@@ -1,5 +1,10 @@
 {% extends 'admin/master.html' %}
 
+{% block head_css %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='css/custom_admin.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block body %}
 <div class="text-center">
     <h1>Добро пожаловать!</h1>

@@ -9,6 +9,7 @@ from  sqlalchemy.sql.expression import func
 from flask_admin import AdminIndexView, expose
 from flask_admin.contrib.sqlamodel import ModelView
 from flask_admin import Admin
+from cloudipsp import Api, Checkout
 
 
 app = Flask(__name__)
@@ -74,7 +75,7 @@ class AdminIndex(AdminIndexView):
             abort(401)
 
 
-admin = Admin(app, name='MotoShop',index_view=AdminIndex())
+admin = Admin(app, name='MotoShop',index_view=AdminIndex(), template_mode='bootstrap3')
 
 class OrdersView(ModelView):
     column_display_pk = True 
@@ -88,6 +89,7 @@ admin.add_view(OrdersView(Orders, db.session))
     
 @app.route('/', methods=['GET', 'POST'])
 def index():
+   
     random_articles = Articles.query.order_by(func.random()).limit(3).all()
     return render_template("index.html",random_articles=random_articles)
 
@@ -163,13 +165,32 @@ def delete_order(id):
 
 @app.route('/add-order/<int:id_user>/<int:id_article>', methods=[ 'POST'])
 def add_order(id_user,id_article):
+    article = Articles.query.get(id_article)
     if request.method == 'POST':
         address = request.form.get('address')
         order = Orders(address=address,id_user=id_user,id_article=id_article)
         db.session.add(order)
         db.session.commit()
+        
     flash("Заказ оформлен!", category="ok")
-    return redirect(url_for("article", id=id_article))
+    
+    api = Api(merchant_id=1396424,
+        secret_key='test')
+    checkout = Checkout(api=api)
+    
+    data = {
+        "currency": "KRW",
+        "amount": str(article.price) + "00"
+        }
+    url = checkout.url(data).get('checkout_url')
+    print(url)
+    return render_template("redirected.html",link=url,id_article=id_article)
+
+
+
+@app.route('/redirected<link><int:id_article>')
+def redirected(link,id_article):
+    return render_template("redirected.html",link=link,id_article=id_article)
 
 
 @app.route('/about')
@@ -236,6 +257,13 @@ def inject_user():
     articles_category=db.session.query(Articles.category).distinct().all(),
     )
 
+
+# Добавляем кастомный CSS-файл
+@app.context_processor
+def inject_custom_css():
+    return dict(
+        admin_css_url='/static/css/custom_admin.css'  # Укажите путь к вашему CSS-файлу
+    )
 
 @app.errorhandler(404)
 def page_not_found(e):

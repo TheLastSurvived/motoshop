@@ -1,0 +1,20 @@
+/* Изменение цвета фона заголовка */
+.navbar-inverse {
+    background-color: #4CAF50; /* Зеленый цвет */
+}
+
+/* Изменение цвета текста в заголовке */
+.navbar-inverse .navbar-brand {
+    color: #FFFFFF; /* Белый цвет */
+}
+
+/* Изменение цвета кнопок */
+.btn-primary {
+    background-color: #FF5722; /* Оранжевый цвет */
+    border-color: #E64A19;
+}
+
+/* Изменение цвета фона таблицы */
+.table {
+    background-color: #F5F5F5; /* Светло-серый цвет */
+}
