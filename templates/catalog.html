@@ -85,8 +85,13 @@
         {%endfor%}
     </nav>
 </div>
+
+{%if search%}
+  <p class="h3">Результаты поиска по запросу: {{search.replace('%', '').lower()}}</p>
+{%endif%}
+
 {%if not articles%}
-  <h1>Список пуст!</h1>
+  <h4>Список пуст!</h4>
 {%endif%}
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
           

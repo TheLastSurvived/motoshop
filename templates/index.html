@@ -76,6 +76,18 @@ MOTOSHOP
         </button>
       </div>
 
+      <div class="bg-dark">
+        <div class="container text-white d-flex justify-content-center aling-items-center text-center">
+          <div class="my-5">
+            <h1>До открытия мотосезона осталось:</h1>
+            <h2 id="timer"></h2>
+         
+          </div>
+        </div>
+            
+      </div>
+    
+
       <div class=" marketing">
         <div class="container">
           <div class="row featurette my-5">
@@ -206,3 +218,27 @@ MOTOSHOP
       </div>
     </main>
     {% endblock %}
+    {% block script %}
+    <script>
+      const targetDate = new Date("2025-05-01T00:00:00").getTime();
+
+      function updateTimer() {
+          const now = new Date().getTime();
+          const distance = targetDate - now;
+
+          const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+          document.getElementById("timer").innerHTML = days + " дней | " + hours + " часов | " + minutes + " минут | " + seconds + " секунд ";
+
+          if (distance < 0) {
+              clearInterval(x);
+              document.getElementById("timer").innerHTML = "Время истекло";
+          }
+      }
+
+      const x = setInterval(updateTimer, 100);
+  </script>
+     {% endblock %}

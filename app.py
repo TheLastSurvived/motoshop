@@ -50,6 +50,15 @@ class Articles(db.Model):
     def __repr__(self):
         return 'Articles %r' % self.id 
     
+
+class Services(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    title = db.Column(db.String(100))
+    text = db.Column(db.Text)
+
+    def __repr__(self):
+        return 'Services %r' % self.id
+    
     
 class Orders(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -114,16 +123,37 @@ def catalog():
     
     if request.method == 'GET':
         category = request.args.get('category')
+        search = request.args.get('search')
         if category:
             category= category.capitalize()
             category = "%{}%".format(category)
             articles = Articles.query.filter(Articles.category.like(category)).all()
             return render_template("catalog.html",articles=articles)
+        elif search:
+            search= search.capitalize()
+            search = "%{}%".format(search)
+            articles = Articles.query.filter(Articles.title.like(search)).all()
+            return render_template("catalog.html",articles=articles,search=search)
+        
         else:
              return render_template("catalog.html",articles=articles)
     
     return render_template("catalog.html",articles=articles)
 
+
+'''
+@app.route('/search', methods=['GET'])
+def search():
+    if request.method == 'POST':
+        search = request.form.get('search')
+        if search:
+            article = search.capitalize()
+            article = "%{}%".format(article)
+            articles = Articles.query.filter(Articles.title.like(article)).all()
+            return render_template("catalog.html",search=search,articles=articles)
+    articles = Articles.query.all()
+    return render_template("catalog.html",search=0,articles=articles)
+'''
 
 @app.route('/article/<int:id>', methods=['GET', 'POST'])
 def article(id):
@@ -197,6 +227,17 @@ def redirected(link,id_article):
 def about():
     return render_template("about.html")
 
+@app.route('/contacts')
+def contacts():
+    return render_template("contacts.html")
+
+
+@app.route('/services/<int:id>')
+def services(id):
+    service = Services.query.get(id)
+    return render_template("services.html",service=service)
+
+
 
 @app.route('/profile')
 def profile():
@@ -257,6 +298,12 @@ def inject_user():
     articles_category=db.session.query(Articles.category).distinct().all(),
     )
 
+
+@app.context_processor
+def inject_services():
+    return dict(
+    services=db.session.query(Services).all(),
+    )
 
 # Добавляем кастомный CSS-файл
 @app.context_processor

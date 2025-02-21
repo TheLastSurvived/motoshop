@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}
+Услуги
+{% endblock %}
+
+{% block main %}
+    <div class="container my-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/">Главная</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Услуги</li>
+              <li class="breadcrumb-item active" aria-current="page">{{service.title}}</li>
+            </ol>
+          </nav>
+        <h1>{{service.title}}</h1>
+        <hr>
+        {% autoescape false %} {{service.text}} {% endautoescape %}
+    </div>
+{% endblock %}

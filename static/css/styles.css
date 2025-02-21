@@ -56,3 +56,8 @@ footer{
   justify-content: center;
 }
 
+
+.search::placeholder{
+  color: white;
+ 
+}
