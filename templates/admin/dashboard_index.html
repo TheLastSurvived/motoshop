@@ -6,9 +6,38 @@
 {% endblock %}
 
 {% block body %}
-<div class="text-center">
-    <h1>Добро пожаловать!</h1>
-    <a href="/">На главную страницу!</a>
+
+
+<div class="container">
+    <h1>Сообщения</h1>
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Имя</th>
+            <th scope="col">Номер телефона</th>
+            <th scope="col">Email</th>
+            <th scope="col">Дата</th>
+            <th scope="col">Сообщение</th>
+            <th scope="col">Статус</th>
+            <th scope="col">#</th>
+          </tr>
+        </thead>
+        <tbody>
+            {%for f in feedback%}
+            <th scope="row">{{f.id}}</th>
+            <td>{{f.name}}</td>
+            <td>{{f.phone}}</td>
+            <td>{{f.email}}</td>
+            <td>{{f.created_at.strftime('%d.%m.%Y %H:%M')}}</td>
+            <td>{{f.message}}</td>
+            <td>{%if f.is_processed%} <span class="text-success">Обработано</span>  {%else%} <span class="text-danger">Обрабатывается</span> {%endif%}</td>
+            <td><a href="/change_status/{{f.id}}" class="btn btn-primary">Изменить статус</a></td>
+          </tr>
+        {%endfor%}
+        </tbody>
+      </table>
+      <a href="/">На главную страницу</a>
 </div>
 
 {% endblock %}

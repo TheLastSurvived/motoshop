@@ -10,6 +10,7 @@ from flask_admin import AdminIndexView, expose
 from flask_admin.contrib.sqlamodel import ModelView
 from flask_admin import Admin
 from cloudipsp import Api, Checkout
+import re
 
 
 app = Flask(__name__)
@@ -70,6 +71,19 @@ class Orders(db.Model):
     def __repr__(self):
         return 'Orders %r' % self.id 
     
+
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(12), nullable=False)  # 375XXXXXXXXX
+    email = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    is_processed = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f'<Feedback {self.id} from {self.name}>'
+    
     
 class AdminIndex(AdminIndexView):
     @expose('/', methods=['GET', 'POST'])
@@ -79,7 +93,8 @@ class AdminIndex(AdminIndexView):
             if user.root!=1:
                 abort(403)
             else:
-                return self.render('admin/dashboard_index.html')
+                feedback = Feedback.query.all()
+                return self.render('admin/dashboard_index.html',feedback=feedback)
         else:
             abort(401)
 
@@ -91,8 +106,10 @@ class OrdersView(ModelView):
     column_hide_backrefs = False
     column_list = ['id_user','id_article', 'address', 'date']
 
+
 admin.add_view(ModelView(Users, db.session))
 admin.add_view(ModelView(Articles, db.session))
+admin.add_view(ModelView(Feedback, db.session))
 admin.add_view(OrdersView(Orders, db.session))
 
     
@@ -105,6 +122,8 @@ def index():
 
 @app.route('/catalog', methods=['GET', 'POST'])
 def catalog(): 
+    max_price_placeholder = db.session.query(func.max(Articles.price)).scalar()
+    min_price_placeholder = db.session.query(func.min(Articles.price)).scalar()
     articles = Articles.query.all()
     if request.method == 'POST':
         title = request.form.get('title')
@@ -124,21 +143,38 @@ def catalog():
     if request.method == 'GET':
         category = request.args.get('category')
         search = request.args.get('search')
-        if category:
-            category= category.capitalize()
-            category = "%{}%".format(category)
-            articles = Articles.query.filter(Articles.category.like(category)).all()
-            return render_template("catalog.html",articles=articles)
-        elif search:
-            search= search.capitalize()
-            search = "%{}%".format(search)
-            articles = Articles.query.filter(Articles.title.like(search)).all()
-            return render_template("catalog.html",articles=articles,search=search)
+        min_price = request.args.get('min_price')
+        max_price = request.args.get('max_price')
+       
+        query = Articles.query
         
-        else:
-             return render_template("catalog.html",articles=articles)
+       
+        if category:
+            category = category.capitalize()
+            query = query.filter(Articles.category.ilike(f"%{category}%"))
+        
+        
+        if search:
+            search = search.capitalize()
+            query = query.filter(
+                Articles.title.like(f"%{search}%") | 
+                Articles.text.like(f"%{search}%")
+            )
+        
+       
+        if min_price:
+            query = query.filter(Articles.price >= min_price)
+        if max_price:
+            query = query.filter(Articles.price <= max_price)
+        
+        
+        articles = query.all()
     
-    return render_template("catalog.html",articles=articles)
+    return render_template("catalog.html", articles=articles,
+  min_price_placeholder=min_price_placeholder,max_price_placeholder=max_price_placeholder,
+        search_query=search,
+        min_price=min_price,
+        max_price=max_price)
 
 
 '''
@@ -173,6 +209,17 @@ def article(id):
         flash("Запись обновлена!", category="ok")
         return redirect(url_for("article", id=article.id))
     return render_template("article.html",article=article)
+
+
+@app.route('/change_status/<int:id>', methods=['GET', 'POST'])
+def change_status(id):
+    if not 'name' in session:
+        abort(403)
+    feedb = Feedback.query.get(id)
+    feedb.is_processed = not feedb.is_processed
+    db.session.commit()
+    flash("Статус обновлен!", category="ok")
+    return redirect('/admin')
 
 
 @app.route('/delete-article/<int:id>')
@@ -238,6 +285,44 @@ def services(id):
     return render_template("services.html",service=service)
 
 
+def validate_belarus_phone(phone):
+    return re.fullmatch(r'375\d{9}', phone)
+
+
+@app.route('/send_feedback', methods=[ 'POST'])
+def send_feedback():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        message = request.form.get('message')
+
+        # Валидация данных
+        if not all([name, phone, email, message]):
+            flash('Все поля обязательны для заполнения', 'error')
+            return redirect(request.referrer or url_for('index'))
+
+        if not validate_belarus_phone(phone):
+            flash('Номер телефона должен быть в формате 375XXXXXXXXX', 'error')
+            return redirect(request.referrer or url_for('index'))
+
+        # Создаем новую запись в базе данных
+        try:
+            new_feedback = Feedback(
+                name=name,
+                phone=phone,
+                email=email,
+                message=message
+            )
+            db.session.add(new_feedback)
+            db.session.commit()
+            flash('Ваше сообщение успешно отправлено!', 'ok')
+        except Exception as e:
+            db.session.rollback()
+            flash('Произошла ошибка при отправке сообщения', 'bad')
+            app.logger.error(f'Error saving feedback: {str(e)}')
+    return redirect(request.referrer or url_for('fallback_route'))
+    
 
 @app.route('/profile')
 def profile():

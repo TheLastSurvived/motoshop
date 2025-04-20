@@ -12,8 +12,59 @@
               <li class="breadcrumb-item active" aria-current="page">{{service.title}}</li>
             </ol>
           </nav>
+     
         <h1>{{service.title}}</h1>
         <hr>
-        {% autoescape false %} {{service.text}} {% endautoescape %}
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+              <div class="card-body">
+                <h3><i class="bi bi-geo-alt"></i> Наш адрес</h3>
+                <p>г. Гродно, ул. Горького, д. 86</p>
+                <h3><i class="bi bi-telephone"></i> Телефон</h3>
+                <p>+375 (29) 123-45-67</p>
+                <h3><i class="bi bi-envelope"></i> Email</h3>
+                <p>info@motoshop.ru</p>
+                <h3><i class="bi bi-clock"></i> Часы работы</h3>
+                <p>Пн-Пт: 9:00 - 18:00</p>
+                <p>Сб-Вс: 10:00 - 16:00</p>
+                <form id="feedbackForm" method="POST" action="/send_feedback" >
+                  <input type="hidden" name="service_id" value="{{ service.id }}">
+                  
+                  <div class="mb-3">
+                    <label for="name" class="form-label">Ваше имя</label>
+                    <input type="text" name="name" class="form-control" id="name" placeholder="Иван Иванов" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Телефон</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" pattern="375[0-9]{9}" placeholder="375XXXXXXXXX" required>
+                  </div>
+               
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" id="email" placeholder="example@mail.ru" required>
+                </div>
+                <div class="mb-3">
+                    <label for="message" class="form-label">Сообщение</label>
+                    <textarea class="form-control" id="message" name="message" rows="5" placeholder="Ваше сообщение..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-dark">Отправить</button>
+                {% with messages = get_flashed_messages(True) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <p class="m-2 flash {{category}}">{{message}}</p>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+                </form>
+              </div> 
+            
+              </div>
+          </div>
+          <div class="col-md-8">
+            {% autoescape false %} {{service.text}} {% endautoescape %}
+          </div>
+        </div>
+       
     </div>
 {% endblock %}

@@ -10,7 +10,7 @@
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Главная</a></li>
-            <li class="breadcrumb-item"><a href="/catalog">Мотоциклы</a></li>
+            <li class="breadcrumb-item"><a href="/catalog">Каталог</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{article.title}}</li>
           </ol>
         </nav>
@@ -48,7 +48,7 @@
               </div>
   
               <div class="mb-3">
-                <label for="disabledTextInput" class="form-label">Цена</label>
+                <label for="disabledTextInput" class="form-label">Цена руб.</label>
                 <input type="number" value="{{article.price}}" id="disabledTextInput" class="form-control" name="price" placeholder="Цена"
                   required>
               </div>
@@ -88,6 +88,7 @@
           <div class="col-md-8">
             <h1>{{article.title}}</h1>
             <h4>{{article.price}} руб.</h4>
+            <p class=""><small>{{article.category}}</small>  </p>
             {%if 'name' in session %}
             <button type="button" class="btn btn-dark my-2"   data-bs-toggle="modal"
             data-bs-target="#exampleModal2">Заказать</button>

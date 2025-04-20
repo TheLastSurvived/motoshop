@@ -10,7 +10,7 @@
         <nav aria-label="breadcrumb ">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Главная</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Мотоциклы</li>
+            <li class="breadcrumb-item active" aria-current="page">Каталог</li>
           </ol>
         </nav>
 
@@ -45,7 +45,7 @@
             </div>
 
             <div class="mb-3">
-              <label for="disabledTextInput" class="form-label">Цена</label>
+              <label for="disabledTextInput" class="form-label">Цена руб.</label>
               <input type="number" id="disabledTextInput" class="form-control" name="price" placeholder="Цена"
                 required>
             </div>
@@ -76,15 +76,7 @@
   {% endfor %}
   {% endif %}
   {% endwith %}
-  <div class="nav-scroller py-1 mb-3 border-bottom">
-    <h2>Категории:</h2>
-    <nav class="nav nav-underline">
-        <a class="nav-item nav-link link-body-emphasis " href="/catalog">Все</a>
-        {%for category in articles_category%}    
-        <a class="nav-item nav-link link-body-emphasis" href="/catalog?category={{category.category}}">{{category.category}}</a>
-        {%endfor%}
-    </nav>
-</div>
+
 
 {%if search%}
   <p class="h3">Результаты поиска по запросу: {{search.replace('%', '').lower()}}</p>
@@ -93,33 +85,69 @@
 {%if not articles%}
   <h4>Список пуст!</h4>
 {%endif%}
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+<div class="row g-3">
+  <div class="col-md-4 d-none d-md-block">
+    <div class="sticky-top pt-3">
+      <form action="/catalog" method="get">
+        <div class="card bg-secondary bg-opacity-10 p-3 ">
+  
+          <label for="category" class="form-label">Категории</label>
+          <select name="category" id="category" class="form-select">
+            <option value="">Все категории</option>
+            {% for category in articles_category %}
+            <option value="{{ category.category }}" 
+                    {% if request.args.get('category') == category.category %}selected{% endif %}>
+                {{ category.category }}
+            </option>
+            {% endfor %}
+        </select>
+        
+        <label for="min_price" class="form-label">Минимальная цена:</label>
+        <input type="number" class="form-control" name="min_price" id="min_price" value="{{min_price_placeholder}}" placeholder="{{min_price_placeholder}}">
+    
+        <label for="max_price" class="form-label">Максимальная цена:</label>
+        <input type="number" class="form-control" name="max_price" id="max_price" value="{{max_price_placeholder}}" placeholder="{{max_price_placeholder}}">
           
-{%for article in articles%}
-          <div class="col">
-            <div class="card shadow-sm bg-dark">
-              <a href="/article/{{article.id}}">
-                <img src="../static/img/upload/{{article.image_name}}" width="100%" alt="" />
-              </a>
+          <!-- Кнопки -->
+          <div class="d-grid gap-2 mt-3">
+            <button type="submit" class="btn btn-dark btn-sm">Применить</button>
+            <a href="/catalog" class="btn btn-outline-danger btn-sm">Сбросить</a>
+          </div>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+  <div class="col-md-8 col-12">
+    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-2 g-3">
+      {% for article in articles %}
+      <div class="col">
+        <div class="card shadow-sm bg-dark h-100 transition-all hover:shadow-lg">
 
-              <div class="card-body">
-                <p class="card-text text-white">{{article.title}}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                  <div class="btn-group">
-                    <a
-                      href="/article/{{article.id}}"
-                      class="btn btn-sm btn-outline-light"
-                      >Просмотр</a
-                    >
-                  </div>
-                  <small class="text-white">{{article.price}} руб.</small>
-                </div>
+          <a href="/article/{{article.id}}">
+            <img src="../static/img/upload/{{article.image_name}}" 
+                 class="card-img-top" 
+                 style="height: 180px; object-fit: cover;" 
+                 alt="{{article.title}}">
+          </a>
+          <div class="card-body">
+            <h6 class="card-text text-white text-truncate">{{article.title}}</h6>
+              <p class="text-white"><small>{{article.category}}</small>  </p>
+            <div class="d-flex justify-content-between align-items-center">
+              <a href="/article/{{article.id}}" class="btn btn-sm btn-outline-light align-self-center">Подробнее</a>
+              <div class="text-end">
+                <div class="text-white fw-bold fs-5">{{article.price}} руб.</div>
               </div>
             </div>
           </div>
-{%endfor%}
-
         </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  
+
+</div>
       </div>
     </main>
 
