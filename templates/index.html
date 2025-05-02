@@ -79,7 +79,7 @@ MOTOSHOP
       <div class="bg-dark">
         <div class="container text-white d-flex justify-content-center aling-items-center text-center">
           <div class="my-5">
-            <h1>До открытия мотосезона осталось:</h1>
+            <h1>До закрытия мотосезона осталось:</h1>
             <h2 id="timer"></h2>
          
           </div>
@@ -221,7 +221,7 @@ MOTOSHOP
     {% endblock %}
     {% block script %}
     <script>
-      const targetDate = new Date("2025-05-01T00:00:00").getTime();
+      const targetDate = new Date("2025-10-01T00:00:00").getTime();
 
       function updateTimer() {
           const now = new Date().getTime();
