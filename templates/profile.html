@@ -3,9 +3,7 @@
 Профиль
 {% endblock %}
 
-
 {% block main %}
-
 
     <main>
       <div class="container my-3">
@@ -25,43 +23,86 @@
           {% endif %}
           {% endwith %}
             <div class="col-md-4">
-                <h1>Мои данные</h1>
-                <h3>{{active_user.name}} {{active_user.surname}}</h3>
-                <small>{{active_user.email}}</small>
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h4">Мои данные</h1>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-light rounded-circle p-3 me-3">
+                                <i class="bi bi-person fs-2 text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="h5 mb-0">{{active_user.name}} {{active_user.surname}}</h3>
+                                <small class="text-muted">{{active_user.email}}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-md-8">
-                <h1>Мои заказы</h1>
-                {%if not orders%}
-                <p>Список пуст!</p>
-              {%else%}
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Номер</th>
-                      <th scope="col">Название заказа</th>
-                      <th scope="col">Адрес</th>
-                      <th scope="col">Дата заказа</th>
-                      <th scope="col">*</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {%for order in orders%}
-                    <tr>
-                      <th>{{order.id}}</th>
-                      <th><a href="/article/{{order.article.id}}">{{order.article.title}}</a></th>
-                      <td>{{order.address}}</td>
-                      <td>{{order.date.strftime('%d.%m.%Y %H:%M')}}</td>
-                      <td><a href="/delete-order/{{order.id}}" class="btn btn-danger">Удалить</a></td>
-                    </tr>
-                    {%endfor%}
-                  </tbody>
-                </table>
-                {%endif%}
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h4 mb-4">Мои заказы</h1>
+                        {%if not orders%}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>У вас пока нет заказов
+                        </div>
+                      {%else%}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                              <thead class="table-light">
+                                <tr>
+                                  <th scope="col">Номер</th>
+                                  <th scope="col">Товар</th>
+                                  <th scope="col">Адрес</th>
+                                  <th scope="col">Дата заказа</th>
+                                  <th scope="col">Оплата</th>
+                                  <th scope="col">Оценка</th>
+                                  <th scope="col">Действия</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {%for order in orders%}
+                                
+                                <tr>
+                                  <th>{{order.id}}</th>
+                                  <td><a href="/article/{{order.article.id}}" class="text-decoration-none">{{order.article.title}}</a></td>
+                                  <td>{{order.address}}</td>
+                                  <td>{{order.date.strftime('%d.%m.%Y %H:%M')}}</td>
+                                  <td>
+    {% if order.payment_method == 'cash' %}
+        <span class="badge bg-warning text-dark">Наличные</span>
+    {% else %}
+        <span class="badge bg-success">Карта</span>
+    {% endif %}
+</td>
+                                  <td>
+    <form action="/rate-article/{{order.article.id}}" method="post" class="rating-form">
+        <div class="rating-stars">
+            {% for i in range(5, 0, -1) %}
+                <input type="radio" id="star{{i}}-{{order.article.id}}" name="rating" value="{{i}}" 
+                       {% if order.article.user_rating and order.article.user_rating.rating == i %}checked{% endif %}>
+                <label for="star{{i}}-{{order.article.id}}">★</label>
+            {% endfor %}
+        </div>
+    </form>
+</td>
+
+                                  <td>
+                                      <a href="/delete-order/{{order.id}}" class="btn btn-sm btn-outline-danger">
+                                          <i class="bi bi-trash"></i> Удалить
+                                      </a>
+                                  </td>
+                                </tr>
+                                {%endfor%}
+                              </tbody>
+                            </table>
+                        </div>
+                        {%endif%}
+                    </div>
+                </div>
             </div>
         </div>
-       
-        
       </div>
     </main>
 
-    {% endblock %}
+{% endblock %}

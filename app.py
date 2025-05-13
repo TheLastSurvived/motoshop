@@ -51,6 +51,13 @@ class Articles(db.Model):
     def __repr__(self):
         return 'Articles %r' % self.id 
     
+    @property
+    def average_rating(self):
+        ratings = Ratings.query.filter_by(id_article=self.id).all()
+        if not ratings:
+            return 0
+        return sum(r.rating for r in ratings) / len(ratings)
+    
 
 class Services(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -67,6 +74,7 @@ class Orders(db.Model):
     id_article = db.Column(db.Integer, db.ForeignKey('articles.id'))
     address = db.Column(db.String(100))
     date = db.Column(db.DateTime, default=datetime.now)
+    payment_method = db.Column(db.String(20), default='card')
 
     def __repr__(self):
         return 'Orders %r' % self.id 
@@ -83,6 +91,17 @@ class Feedback(db.Model):
 
     def __repr__(self):
         return f'<Feedback {self.id} from {self.name}>'
+    
+
+class Ratings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_user = db.Column(db.Integer, db.ForeignKey('users.id'))
+    id_article = db.Column(db.Integer, db.ForeignKey('articles.id'))
+    rating = db.Column(db.Integer)  # от 1 до 5
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    def __repr__(self):
+        return f'<Rating {self.rating} stars for article {self.id_article}>'
     
     
 class AdminIndex(AdminIndexView):
@@ -191,6 +210,36 @@ def search():
     return render_template("catalog.html",search=0,articles=articles)
 '''
 
+
+@app.route('/rate-article/<int:article_id>', methods=['POST'])
+def rate_article(article_id):
+    if not 'name' in session:
+        abort(401)
+    
+    user = Users.query.filter_by(email=session['name']).first()
+    rating_value = int(request.form.get('rating'))
+    
+    
+    existing_rating = Ratings.query.filter_by(
+        id_user=user.id,
+        id_article=article_id
+    ).first()
+    
+    if existing_rating:
+        existing_rating.rating = rating_value
+    else:
+        new_rating = Ratings(
+            id_user=user.id,
+            id_article=article_id,
+            rating=rating_value
+        )
+        db.session.add(new_rating)
+    
+    db.session.commit()
+    flash("Спасибо за вашу оценку!", "ok")
+    return redirect('/profile')
+
+
 @app.route('/article/<int:id>', methods=['GET', 'POST'])
 def article(id):
     article = Articles.query.get(id)
@@ -240,28 +289,34 @@ def delete_order(id):
     return redirect('/profile')
 
 
-@app.route('/add-order/<int:id_user>/<int:id_article>', methods=[ 'POST'])
-def add_order(id_user,id_article):
+@app.route('/add-order/<int:id_user>/<int:id_article>', methods=['POST'])
+def add_order(id_user, id_article):
     article = Articles.query.get(id_article)
     if request.method == 'POST':
         address = request.form.get('address')
-        order = Orders(address=address,id_user=id_user,id_article=id_article)
+        payment_method = request.form.get('payment_method', 'card')  # По умолчанию карта
+        order = Orders(
+            address=address,
+            id_user=id_user,
+            id_article=id_article,
+            payment_method=payment_method
+        )
         db.session.add(order)
         db.session.commit()
         
-    flash("Заказ оформлен!", category="ok")
-    
-    api = Api(merchant_id=1396424,
-        secret_key='test')
-    checkout = Checkout(api=api)
-    
-    data = {
-        "currency": "KRW",
-        "amount": str(article.price) + "00"
-        }
-    url = checkout.url(data).get('checkout_url')
-    print(url)
-    return render_template("redirected.html",link=url,id_article=id_article)
+        flash("Заказ оформлен!", category="ok")
+        
+        if payment_method == 'card':
+            api = Api(merchant_id=1396424, secret_key='test')
+            checkout = Checkout(api=api)
+            data = {
+                "currency": "KRW",
+                "amount": str(article.price) + "00"
+            }
+            url = checkout.url(data).get('checkout_url')
+            return render_template("redirected.html", link=url, id_article=id_article)
+        else:
+            return redirect('/profile')
 
 
 
@@ -297,7 +352,7 @@ def send_feedback():
         email = request.form.get('email')
         message = request.form.get('message')
 
-        # Валидация данных
+
         if not all([name, phone, email, message]):
             flash('Все поля обязательны для заполнения', 'error')
             return redirect(request.referrer or url_for('index'))
@@ -306,7 +361,7 @@ def send_feedback():
             flash('Номер телефона должен быть в формате 375XXXXXXXXX', 'error')
             return redirect(request.referrer or url_for('index'))
 
-        # Создаем новую запись в базе данных
+       
         try:
             new_feedback = Feedback(
                 name=name,
@@ -330,7 +385,15 @@ def profile():
         abort(401)
     total_user = Users.query.filter_by(email=session['name']).first()
     orders = Orders.query.filter_by(id_user=total_user.id).join(Articles).all()
-    return render_template("profile.html",orders=orders)
+    
+    # Получаем все оценки пользователя
+    user_ratings = {r.id_article: r for r in Ratings.query.filter_by(id_user=total_user.id).all()}
+    
+    # Добавляем оценку к каждому заказу
+    for order in orders:
+        order.article.user_rating = user_ratings.get(order.article.id)
+    
+    return render_template("profile.html", orders=orders)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -373,7 +436,13 @@ def reg():
 def inject_user():
     def get_user_name():
         if 'name' in session:
-            return Users.query.filter_by(email=session['name']).first()
+            user = Users.query.filter_by(email=session['name']).first()
+            if user:
+                # Добавляем рейтинги пользователя к статьям
+                user_ratings = {r.id_article: r for r in Ratings.query.filter_by(id_user=user.id).all()}
+                for article in Articles.query.all():
+                    article.user_rating = user_ratings.get(article.id)
+            return user
     return dict(active_user=get_user_name())
 
 
@@ -385,16 +454,31 @@ def inject_user():
 
 
 @app.context_processor
+def utility_processor():
+    def pluralize(count, form1, form2, form5):
+        count = abs(count) % 100
+        if 10 < count < 20:
+            return form5
+        count = count % 10
+        if count == 1:
+            return form1
+        if 1 < count < 5:
+            return form2
+        return form5
+    return dict(pluralize=pluralize)
+
+
+@app.context_processor
 def inject_services():
     return dict(
     services=db.session.query(Services).all(),
     )
 
-# Добавляем кастомный CSS-файл
+
 @app.context_processor
 def inject_custom_css():
     return dict(
-        admin_css_url='/static/css/custom_admin.css'  # Укажите путь к вашему CSS-файлу
+        admin_css_url='/static/css/custom_admin.css'  
     )
 
 @app.errorhandler(404)

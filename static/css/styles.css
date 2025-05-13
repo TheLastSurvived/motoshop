@@ -65,3 +65,61 @@ footer{
 .cke_notifications_area{
   display: none;
 }
+
+.rating-stars {
+  display: inline-block;
+  direction: rtl;
+  unicode-bidi: bidi-override;
+}
+.rating-stars input {
+  display: none;
+}
+.rating-stars label {
+  color: #ccc;
+  font-size: 1.5rem;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+  color: #ffc107;
+}
+.rating-stars input:checked + label:hover,
+.rating-stars input:checked ~ label:hover,
+.rating-stars label:hover ~ input:checked ~ label,
+.rating-stars input:checked ~ label:hover ~ label {
+  color: #ffc107;
+}
+
+.rating-stars {
+    display: inline-block;
+    unicode-bidi: bidi-override;
+    direction: rtl;
+}
+.rating-stars input {
+    display: none;
+}
+.rating-stars label {
+    color: #ccc;
+    font-size: 1.5rem;
+    padding: 0 2px;
+    cursor: pointer;
+}
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+    color: #ffc107;
+}
+
+
+.average-rating {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.average-rating span {
+    display: inline-block;
+    width: 1em;
+    text-align: center;
+}
