@@ -123,3 +123,18 @@ footer{
     width: 1em;
     text-align: center;
 }
+
+.table-responsive {
+        font-size: 0.8rem;
+    }
+
+
+@media (max-width: 576px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    .btn-sm {
+        padding: 0.15rem 0.3rem;
+        font-size: 0.7rem;
+    }
+}
