@@ -37,6 +37,16 @@ class Users(db.Model):
     def __repr__(self):
         return 'User %r' % self.id 
     
+
+class ArticleImages(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_article = db.Column(db.Integer, db.ForeignKey('articles.id'))
+    image_name = db.Column(db.String(100))
+    order = db.Column(db.Integer)
+    
+    def __repr__(self):
+        return f'<ArticleImage {self.id} for article {self.id_article}>'
+    
     
 class Articles(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -47,6 +57,7 @@ class Articles(db.Model):
     price = db.Column(db.Integer)
     
     orders = db.relationship('Orders', backref='article', lazy=True)
+    gallery_images = db.relationship('ArticleImages', backref='article', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return 'Articles %r' % self.id 
@@ -75,6 +86,8 @@ class Orders(db.Model):
     address = db.Column(db.String(100))
     date = db.Column(db.DateTime, default=datetime.now)
     payment_method = db.Column(db.String(20), default='card')
+    size = db.Column(db.String(100))
+    phone = db.Column(db.String(100))
 
     def __repr__(self):
         return 'Orders %r' % self.id 
@@ -143,7 +156,8 @@ def index():
 def catalog(): 
     max_price_placeholder = db.session.query(func.max(Articles.price)).scalar()
     min_price_placeholder = db.session.query(func.min(Articles.price)).scalar()
-    articles = Articles.query.all()
+    
+    # Обработка формы добавления статьи (для администратора)
     if request.method == 'POST':
         title = request.form.get('title')
         category = request.form.get('category')
@@ -159,38 +173,44 @@ def catalog():
         flash("Запись добавлена!", category="ok")
         return redirect(url_for("catalog"))
     
-    if request.method == 'GET':
-        category = request.args.get('category')
-        search = request.args.get('search')
-        min_price = request.args.get('min_price')
-        max_price = request.args.get('max_price')
-       
-        query = Articles.query
-        
-       
-        if category:
-            category = category.capitalize()
-            query = query.filter(Articles.category.ilike(f"%{category}%"))
-        
-        
-        if search:
-            search = search.capitalize()
-            query = query.filter(
-                Articles.title.like(f"%{search}%") | 
-                Articles.text.like(f"%{search}%")
-            )
-        
-       
-        if min_price:
-            query = query.filter(Articles.price >= min_price)
-        if max_price:
-            query = query.filter(Articles.price <= max_price)
-        
-        
-        articles = query.all()
+    # Получаем параметры пагинации
+    page = request.args.get('page', 1, type=int)
+    per_page = 6  # Количество элементов на странице
     
-    return render_template("catalog.html", articles=articles,
-  min_price_placeholder=min_price_placeholder,max_price_placeholder=max_price_placeholder,
+    # Получаем параметры фильтрации
+    category = request.args.get('category')
+    search = request.args.get('search')
+    min_price = request.args.get('min_price')
+    max_price = request.args.get('max_price')
+   
+    query = Articles.query
+    
+    # Применяем фильтры
+    if category:
+        category = category.capitalize()
+        query = query.filter(Articles.category.ilike(f"%{category}%"))
+    
+    if search:
+        search = search.capitalize()
+        query = query.filter(
+            Articles.title.like(f"%{search}%") | 
+            Articles.text.like(f"%{search}%")
+        )
+   
+    if min_price:
+        query = query.filter(Articles.price >= min_price)
+    if max_price:
+        query = query.filter(Articles.price <= max_price)
+    
+    # Применяем пагинацию
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    articles = pagination.items
+    
+    return render_template("catalog.html", 
+        articles=articles,
+        pagination=pagination,
+        min_price_placeholder=min_price_placeholder,
+        max_price_placeholder=max_price_placeholder,
         search_query=search,
         min_price=min_price,
         max_price=max_price)
@@ -243,21 +263,72 @@ def rate_article(article_id):
 @app.route('/article/<int:id>', methods=['GET', 'POST'])
 def article(id):
     article = Articles.query.get(id)
+    if not article:
+        abort(404)
     if request.method == 'POST':
+        # Обработка добавления изображений в галерею
+        if 'add_gallery_images' in request.form:
+            images = request.files.getlist('gallery_images')
+            existing_count = len(article.gallery_images)
+            
+            for i, image in enumerate(images):
+                if existing_count + i >= 3:
+                    flash("Максимальное количество изображений - 3. Добавлены только первые файлы.", "danger")
+                    break
+                
+                if image and allowed_file(image.filename):
+                    filename = secure_filename(image.filename)
+                    pic_name = str(uuid.uuid4()) + "_" + filename
+                    image.save("static/img/upload/" + pic_name)
+                    new_image = ArticleImages(
+                        id_article=article.id, 
+                        image_name=pic_name,
+                        order=existing_count + i
+                    )
+                    db.session.add(new_image)
+            
+            db.session.commit()
+            flash("Изображения добавлены в галерею!", "success")
+            return redirect(url_for("article", id=article.id))
+        
+        # Остальная обработка формы (редактирование статьи)
         article.title = request.form.get('title')
         article.category = request.form.get('category')
         article.price = request.form.get('price')
         article.text = request.form.get('ckeditor')
         image = request.files['image']
-        if image:
+        if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             pic_name = str(uuid.uuid4()) + "_" + filename
             image.save("static/img/upload/" + pic_name)
             article.image_name = pic_name
         db.session.commit()
-        flash("Запись обновлена!", category="ok")
+        flash("Запись обновлена!", category="success")
         return redirect(url_for("article", id=article.id))
-    return render_template("article.html",article=article)
+    article.gallery_images = sorted(article.gallery_images, key=lambda x: x.order)
+    return render_template("article.html", article=article)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/delete-gallery-image/<int:id>')
+def delete_gallery_image(id):
+    if not 'name' in session:
+        abort(401)
+    user = Users.query.filter_by(email=session['name']).first()
+    if user.root != 1:
+        abort(403)
+    
+    image = ArticleImages.query.get(id)
+    if image:
+        article_id = image.id_article
+        db.session.delete(image)
+        db.session.commit()
+        flash("Изображение удалено из галереи!", category="danger")
+        return redirect(url_for("article", id=article_id))
+    abort(404)
 
 
 @app.route('/change_status/<int:id>', methods=['GET', 'POST'])
@@ -276,7 +347,7 @@ def delete_article(id):
     obj = Articles.query.filter_by(id=id).first()
     db.session.delete(obj)
     db.session.commit()
-    flash("Запись удалена!", category="bad")
+    flash("Запись удалена!", category="danger")
     return redirect('/catalog')
 
 
@@ -285,7 +356,7 @@ def delete_order(id):
     obj = Orders.query.filter_by(id=id).first()
     db.session.delete(obj)
     db.session.commit()
-    flash("Заказ отменен!", category="bad")
+    flash("Заказ отменен!", category="danger")
     return redirect('/profile')
 
 
@@ -295,16 +366,22 @@ def add_order(id_user, id_article):
     if request.method == 'POST':
         address = request.form.get('address')
         payment_method = request.form.get('payment_method', 'card')  # По умолчанию карта
+        size = request.form.get('size')
+        phone = request.form.get('phone')
+        if not size:
+            size = '-'
         order = Orders(
             address=address,
             id_user=id_user,
             id_article=id_article,
-            payment_method=payment_method
+            payment_method=payment_method,
+            size = size,
+            phone=phone
         )
         db.session.add(order)
         db.session.commit()
         
-        flash("Заказ оформлен!", category="ok")
+        flash("Заказ оформлен! С вами свяжется наш оператор.", category="ok")
         
         if payment_method == 'card':
             api = Api(merchant_id=1396424, secret_key='test')
@@ -318,7 +395,42 @@ def add_order(id_user, id_article):
         else:
             return redirect('/profile')
 
-
+@app.route('/update-profile', methods=['POST'])
+def update_profile():
+    if not 'name' in session:
+        abort(401)
+    
+    user = Users.query.filter_by(email=session['name']).first()
+    
+    # Проверка текущего пароля
+    current_password = md5(request.form.get('current_password').encode()).hexdigest()
+    if current_password != user.password:
+        flash("Неверный текущий пароль!", "bad")
+        return redirect('/profile')
+    
+    try:
+        # Обновление данных
+        user.name = request.form.get('name')
+        user.surname = request.form.get('surname')
+        user.email = request.form.get('email')
+        
+        # Обновление пароля, если указан новый
+        new_password = request.form.get('new_password')
+        if new_password:
+            user.password = md5(new_password.encode()).hexdigest()
+        
+        db.session.commit()
+        flash("Профиль успешно обновлен!", "ok")
+        
+        # Обновляем email в сессии, если он был изменен
+        session['name'] = user.email
+        
+    except Exception as e:
+        db.session.rollback()
+        flash("Произошла ошибка при обновлении профиля", "bad")
+        app.logger.error(f'Error updating profile: {str(e)}')
+    
+    return redirect('/profile')
 
 @app.route('/redirected<link><int:id_article>')
 def redirected(link,id_article):
@@ -407,7 +519,7 @@ def login():
             session['name'] = Users.query.filter_by(email=email).first().email
             return redirect(url_for("index"))
         else:
-            flash("Неправильная почта или пароль!", category="bad")
+            flash("Неправильная почта или пароль!", category="danger")
             return redirect(url_for("login"))
     return render_template("login.html")
 
@@ -423,10 +535,10 @@ def reg():
             user = Users(name=name,surname=surname,email=email,password=md5(password.encode()).hexdigest())
             db.session.add(user)
             db.session.commit()
-            flash("Регистрация прошла успешно!", category="ok")
+            flash("Регистрация прошла успешно!", category="success")
             return redirect(url_for("reg"))
         except:
-            flash("Произошла ошибка! Проверьте введенные данные!", category="bad")
+            flash("Произошла ошибка! Проверьте введенные данные!", category="danger")
             db.session.rollback()
             return redirect(url_for("reg"))
     return render_template("reg.html")

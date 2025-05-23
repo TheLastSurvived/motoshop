@@ -1,164 +1,331 @@
 {% extends 'base.html' %}
 {% block title %}
-{{article.title}}
+{{article.title}} | MOTOSHOP
 {% endblock %}
 
 {% block main %}
 {{ ckeditor.load() }}
-    <main>
-      <div class="container my-3">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Главная</a></li>
-            <li class="breadcrumb-item"><a href="/catalog">Каталог</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{article.title}}</li>
+    <main class="py-4">
+      <div class="container">
+        <!-- Хлебные крошки -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb bg-light rounded-3 px-3 py-2 shadow-sm">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Главная</a></li>
+            <li class="breadcrumb-item"><a href="/catalog" class="text-decoration-none"><i class="bi bi-grid me-1"></i>Каталог</a></li>
+            <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">{{article.title|truncate(30)}}</li>
           </ol>
         </nav>
 
-
+        <!-- Кнопки администратора -->
         {%if 'name' in session and active_user.root==1%}
-    <button
-      type="button"
-      class="btn btn-warning mb-3"
-      data-bs-toggle="modal"
-      data-bs-target="#exampleModal"
-    >
-      Изменить
-    </button>
-    <a href="/delete-article/{{article.id}}" class="btn btn-danger mb-3">Удалить</a>
-
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel">Изменить запись</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form method="post" enctype="multipart/form-data">
-              <div class="mb-3">
-                <label for="disabledTextInput" class="form-label">Название</label>
-                <input type="text" value="{{article.title}}" id="disabledTextInput" class="form-control" name="title" placeholder="Название"
-                  required>
-              </div>
-              <div class="mb-3">
-                <label for="disabledTextInput" class="form-label">Категория</label>
-                <input type="text" value="{{article.category}}" id="disabledTextInput" class="form-control" name="category" placeholder="Категория"
-                  required>
-              </div>
-  
-              <div class="mb-3">
-                <label for="disabledTextInput" class="form-label">Цена руб.</label>
-                <input type="number" value="{{article.price}}" id="disabledTextInput" class="form-control" name="price" placeholder="Цена"
-                  required>
-              </div>
-        
-              <div class="mb-3">
-                <label for="disabledTextInput" class="form-label">Изображение</label>
-                <input type="file" id="disabledTextInput" name="image" class="form-control" accept=".jpg,.jpeg,.png"
-                  >
-              </div>
-              <div class="mb-3">
-                <h3>Содержимое</h3>
-                {{ ckeditor.create(value=article.text) }}
-              </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-            <button type="submit" class="btn btn-warning">Изменить запись</button>
-          </div>
-          </form>
+        <div class="d-flex gap-2 mb-4">
+          <button type="button" class="btn btn-warning rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#editProductModal">
+            <i class="bi bi-pencil-square me-2"></i>Редактировать
+          </button>
+          <a href="/delete-article/{{article.id}}" class="btn btn-danger rounded-pill px-4" onclick="return confirm('Вы уверены, что хотите удалить этот товар?')">
+            <i class="bi bi-trash me-2"></i>Удалить
+          </a>
         </div>
-      </div>
-    </div>
-    {%endif%}
-    {% with messages = get_flashed_messages(True) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <p class="m-2 flash {{category}}">{{message}}</p>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
-        <div class="row">
-          <div class="col-md-4">
-            <img src="../static/img/upload/{{article.image_name}}" width="100%" alt="{{article.title}}" />
-         
-       
-          </div>
-          <div class="col-md-8">
-            <h1>{{article.title}}</h1>
-            <h4>{{article.price}} руб.</h4>
-            <p class=""><small>{{article.category}}</small>  </p>
-            <div class="mt-3">
-    <h5>Рейтинг товара:</h5>
-    <div class="average-rating mb-2" title="Средний рейтинг {{ "%.1f"|format(article.average_rating) }} из 5">
-        {% set avg_rating = article.average_rating %}
-        {% set full_stars = avg_rating|int %}
-        {% set has_half_star = (avg_rating - full_stars) >= 0.5 %}
-        
-        {% for i in range(1, 6) %}
-            {% if i <= full_stars %}
-                <i class="bi bi-star-fill text-warning"></i>
-            {% elif i == full_stars + 1 and has_half_star %}
-                <i class="bi bi-star-half text-warning"></i>
-            {% else %}
-                <i class="bi bi-star text-secondary"></i>
-            {% endif %}
-        {% endfor %}
-        <span class="ms-2">{{ "%.1f"|format(avg_rating) }}</span>
-    </div>
-  
-</div>
-            {%if 'name' in session %}
-            <button type="button" class="btn btn-dark my-2"   data-bs-toggle="modal"
-            data-bs-target="#exampleModal2">Заказать</button>
 
-            <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Введите адрес доставки</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Модальное окно редактирования -->
+        <div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+              <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Редактировать товар</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Название</label>
+                      <input type="text" class="form-control" name="title" value="{{article.title}}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Категория</label>
+                      <input type="text" class="form-control" name="category" value="{{article.category}}" required>
+                    </div>
                   </div>
-                  <div class="modal-body">
-                    <form method="post" action="{{url_for('add_order', id_user=active_user.id, id_article=article.id)}}">
-                      <div class="mb-3">
-                        <label for="disabledTextInput" class="form-label">Адрес</label>
-                        <input type="text" id="disabledTextInput" class="form-control" name="address" placeholder="Адрес"
-                          required>
-                      </div>
-                      <div class="mb-3">
-    <label class="form-label">Способ оплаты</label>
-    <div class="form-check">
-        <input class="form-check-input" type="radio" name="payment_method" id="payment_card" value="card" checked>
-        <label class="form-check-label" for="payment_card">
-            Оплата картой
-        </label>
-    </div>
-    <div class="form-check">
-        <input class="form-check-input" type="radio" name="payment_method" id="payment_cash" value="cash">
-        <label class="form-check-label" for="payment_cash">
-            Оплата наличными
-        </label>
-    </div>
-</div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Цена (руб.)</label>
+                      <input type="number" class="form-control" name="price" value="{{article.price}}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Изображение</label>
+                      <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png">
+                      <div class="form-text">Текущее изображение: {{article.image_name}}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Описание</label>
+                    {{ ckeditor.create(value=article.text) }}
+                  </div>
+                  
+                  <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-warning">Сохранить изменения</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {%endif%}
+
+        <!-- Флэш-сообщения -->
+        {% with messages = get_flashed_messages(True) %}
+          {% if messages %}
+          <div class="mb-4">
+            {% for category, message in messages %}
+            <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+              {{message}}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+          <!-- Галерея изображений -->
+          <div class="col-lg-5">
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-body p-3">
+                <div class="main-image text-center mb-3">
+                  <img id="currentImage" src="../static/img/upload/{{article.image_name}}" 
+                       class="img-fluid rounded-3 cursor-pointer" 
+                       style="max-height: 400px; width: auto;"
+                       data-bs-toggle="modal" data-bs-target="#imageModal"
+                       alt="{{article.title}}">
+                </div>
+                
+                <div class="gallery-thumbnails">
+                  <h6 class="fw-bold mb-3">Галерея изображений</h6>
+                  <div class="row g-2">
+                    <!-- Основное изображение -->
+                    <div class="col-4 col-md-3">
+                      <img src="../static/img/upload/{{article.image_name}}" 
+                           class="img-thumbnail thumbnail-active" 
+                           onclick="changeMainImage(this.src)"
+                           alt="{{article.title}} миниатюра 1">
+                    </div>
                     
+                    {% for img in article.gallery_images %}
+                    <div class="col-5 col-md-3 position-relative">
+                      <img src="../static/img/upload/{{img.image_name}}" 
+                           class="img-thumbnail" 
+                           onclick="changeMainImage(this.src)"
+                           alt="{{article.title}} миниатюра {{ loop.index + 1 }}">
+                      {% if 'name' in session and active_user.root == 1 %}
+                      <button class="btn btn-sm btn-danger p-0 position-absolute top-0 end-0 rounded-circle" 
+                              style="width: 20px; height: 20px; font-size: 10px;"
+                              onclick="return confirmDeleteImage({{img.id}})">
+                        ×
+                      </button>
+                      {% endif %}
+                    </div>
+                    {% endfor %}
                   </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                    <button type="submit" class="btn btn-dark">Заказать</button>
-                  </div>
-                  </form>
                 </div>
               </div>
             </div>
-            {%else%}
-            <p>Для заказа необходимо <a href="/reg" class="link-dark">зарегистрироваться!</a> </p>
-            {%endif%}
-            {% autoescape false %} {{article.text}} {% endautoescape %}
+
+            <!-- Добавление изображений для админа -->
+            {% if 'name' in session and active_user.root == 1 %}
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <h5 class="card-title text-center mb-3"><i class="bi bi-images me-2"></i>Добавить в галерею</h5>
+                <form method="post" enctype="multipart/form-data">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Выберите файлы</label>
+                    <input required type="file" name="gallery_images" class="form-control" 
+                           accept="image/*" multiple 
+                           {% if article.gallery_images|length >= 3 %}disabled{% endif %}>
+                    <div class="form-text">
+                      Максимум 3 изображения (осталось мест: {{ 3 - article.gallery_images|length }})
+                    </div>
+                  </div>
+                  <input type="hidden" name="add_gallery_images" value="1" required>
+                  <button type="submit" class="btn btn-dark w-100 rounded-pill"
+                          {% if article.gallery_images|length >= 3 %}disabled{% endif %}>
+                    <i class="bi bi-upload me-2"></i>Загрузить
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Информация о товаре -->
+          <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h1 class="fw-bold mb-2">{{article.title}}</h1>
+                    <span class="badge bg-danger rounded-pill mb-3">{{article.category}}</span>
+                  </div>
+                  <h2 class="text-danger fw-bold">{{article.price}} руб.</h2>
+                </div>
+
+                <!-- Рейтинг -->
+                <div class="rating mb-4">
+                  {% set avg_rating = article.average_rating %}
+                  {% set full_stars = avg_rating|int %}
+                  {% set has_half_star = (avg_rating - full_stars) >= 0.5 %}
+                  
+                  {% for i in range(1, 6) %}
+                      {% if i <= full_stars %}
+                          <i class="bi bi-star-fill text-warning fs-4"></i>
+                      {% elif i == full_stars + 1 and has_half_star %}
+                          <i class="bi bi-star-half text-warning fs-4"></i>
+                      {% else %}
+                          <i class="bi bi-star text-secondary fs-4"></i>
+                      {% endif %}
+                  {% endfor %}
+                  <span class="ms-2 fs-5 fw-bold">{{ "%.1f"|format(avg_rating) }}</span>
+                  <span class="text-muted ms-2">(на основе отзывов)</span>
+                </div>
+
+                <!-- Кнопка заказа -->
+                {%if 'name' in session %}
+                <button type="button" class="btn btn-danger btn-lg w-100 rounded-pill mb-4" data-bs-toggle="modal" data-bs-target="#orderModal">
+                  <i class="bi bi-cart3 me-2"></i>Заказать
+                </button>
+                {%else%}
+                <div class="alert alert-info">
+                  <i class="bi bi-info-circle me-2"></i>Для заказа необходимо <a href="/login" class="alert-link">войти</a> или <a href="/reg" class="alert-link">зарегистрироваться</a>
+                </div>
+                {%endif%}
+
+                <!-- Описание товара -->
+                <div class="product-description mb-4">
+                  <h4 class="fw-bold border-bottom pb-2 mb-3">Описание</h4>
+                  {% autoescape false %} {{article.text}} {% endautoescape %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+{% if 'name' in session  %}
+      <!-- Модальное окно заказа -->
+      <div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title"><i class="bi bi-cart3 me-2"></i>Оформление заказа</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form method="post" action="{{url_for('add_order', id_user=active_user.id, id_article=article.id)}}">
+                <div class="mb-4">
+                  <h6 class="fw-bold mb-3">{{article.title}}</h6>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span>Цена:</span>
+                    <span class="fw-bold">{{article.price}} руб.</span>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Адрес доставки</label>
+                  <input type="text" class="form-control" name="address" placeholder="Введите ваш адрес" required>
+                </div>
+                
+                {%if article.category == 'Экипировка'%}
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Размер</label>
+                  <select class="form-select" name="size" required>
+                    <option value="" selected disabled>Выберите размер</option>
+                    <option value="2XS">2XS</option>
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="2XL">2XL</option>
+                    <option value="3XL">3XL</option>
+                  </select>
+                </div>
+                {%endif%}
+
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Телефон</label>
+                  <input type="tel" class="form-control" name="phone" placeholder="+375 XX XXX XX XX" 
+                         pattern="\+375\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}" required>
+                  <div class="form-text">Формат: +375 XX XXX XX XX</div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label fw-bold">Способ оплаты</label>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="payment_method" id="payment_card" value="card" checked>
+                    <label class="form-check-label" for="payment_card">
+                      <i class="bi bi-credit-card me-2"></i>Оплата картой
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="payment_method" id="payment_cash" value="cash">
+                    <label class="form-check-label" for="payment_cash">
+                      <i class="bi bi-cash-coin me-2"></i>Оплата наличными
+                    </label>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn btn-danger w-100 rounded-pill py-2">
+                  <i class="bi bi-check-circle me-2"></i>Подтвердить заказ
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+{%endif%}
+      <!-- Модальное окно изображения -->
+      <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+          <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0">
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+              <img id="modalImage" src="" class="img-fluid" style="max-height: 80vh;">
+            </div>
           </div>
         </div>
       </div>
     </main>
 
-    {% endblock %}
+    <script>
+      function changeMainImage(src) {
+        document.getElementById('currentImage').src = src;
+        document.querySelectorAll('.img-thumbnail').forEach(el => {
+          el.classList.remove('thumbnail-active');
+        });
+        event.target.classList.add('thumbnail-active');
+      }
+
+      function confirmDeleteImage(imageId) {
+        if (confirm('Вы уверены, что хотите удалить это изображение?')) {
+          window.location.href = '/delete-gallery-image/' + imageId;
+        }
+        return false;
+      }
+
+      // Инициализация модального окна изображения
+      document.getElementById('currentImage').addEventListener('click', function() {
+        document.getElementById('modalImage').src = this.src;
+      });
+
+      // Инициализация всех миниатюр для модального окна
+      document.querySelectorAll('.img-thumbnail').forEach(el => {
+        el.addEventListener('click', function() {
+          document.getElementById('modalImage').src = this.src;
+        });
+      });
+    </script>
+{% endblock %}

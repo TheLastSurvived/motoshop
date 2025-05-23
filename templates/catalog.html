@@ -1,170 +1,273 @@
 {% extends 'base.html' %}
 {% block title %}
-Мотоциклы
+Каталог мотоциклов | MOTOSHOP
 {% endblock %}
 
 {% block main %}
 {{ ckeditor.load() }}
-    <main>
-      <div class="container my-3">
-        <nav aria-label="breadcrumb ">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Главная</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Каталог</li>
+    <main class="py-4">
+      <div class="container">
+        <!-- Хлебные крошки -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb bg-light rounded-3 px-3 py-2 shadow-sm">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Главная</a></li>
+            <li class="breadcrumb-item active text-danger fw-bold" aria-current="page"><i class="bi bi-grid me-1"></i>Каталог</li>
           </ol>
         </nav>
 
+        <!-- Кнопка добавления для админа -->
         {%if 'name' in session and active_user.root==1%}
-    <button
-    type="button"
-    class="btn btn-dark mb-3"
-    data-bs-toggle="modal"
-    data-bs-target="#exampleModal"
-  >
-    Добавить запись
-  </button>
-
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить запись</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-end mb-4">
+          <button type="button" class="btn btn-danger rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bi bi-plus-circle me-2"></i>Добавить товар
+          </button>
         </div>
-        <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
-            <div class="mb-3">
-              <label for="disabledTextInput" class="form-label">Название</label>
-              <input type="text" id="disabledTextInput" class="form-control" name="title" placeholder="Название"
-                required>
-            </div>
-            <div class="mb-3">
-              <label for="disabledTextInput" class="form-label">Категория</label>
-              <input type="text" id="disabledTextInput" class="form-control" name="category" placeholder="Категория"
-                required>
-            </div>
 
-            <div class="mb-3">
-              <label for="disabledTextInput" class="form-label">Цена руб.</label>
-              <input type="number" id="disabledTextInput" class="form-control" name="price" placeholder="Цена"
-                required>
-            </div>
-      
-            <div class="mb-3">
-              <label for="disabledTextInput" class="form-label">Изображение</label>
-              <input type="file" id="disabledTextInput" name="image" class="form-control" accept=".jpg,.jpeg,.png"
-                required>
-            </div>
-            <div class="mb-3">
-              <h3>Содержимое</h3>
-              {{ ckeditor.create() }}
-            </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-          <button type="submit" class="btn btn-dark">Добавить запись</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  {%endif%}
-  {% with messages = get_flashed_messages(True) %}
-  {% if messages %}
-  {% for category, message in messages %}
-  <p class="m-2 flash {{category}}">{{message}}</p>
-  {% endfor %}
-  {% endif %}
-  {% endwith %}
-
-
-{%if search%}
-  <p class="h3">Результаты поиска по запросу: {{search.replace('%', '').lower()}}</p>
-{%endif%}
-
-{%if not articles%}
-  <h4>Список пуст!</h4>
-{%endif%}
-<div class="row g-3">
-  <div class="col-md-4 d-none d-md-block">
-    <div class="sticky-top pt-3">
-      <form action="/catalog" method="get">
-        <div class="card bg-secondary bg-opacity-10 p-3 ">
-  
-          <label for="category" class="form-label">Категории</label>
-          <select name="category" id="category" class="form-select">
-            <option value="">Все категории</option>
-            {% for category in articles_category %}
-            <option value="{{ category.category }}" 
-                    {% if request.args.get('category') == category.category %}selected{% endif %}>
-                {{ category.category }}
-            </option>
-            {% endfor %}
-        </select>
-        
-        <label for="min_price" class="form-label">Минимальная цена:</label>
-        <input type="number" class="form-control" name="min_price" id="min_price" value="{{min_price_placeholder}}" placeholder="{{min_price_placeholder}}">
-    
-        <label for="max_price" class="form-label">Максимальная цена:</label>
-        <input type="number" class="form-control" name="max_price" id="max_price" value="{{max_price_placeholder}}" placeholder="{{max_price_placeholder}}">
-          
-          <!-- Кнопки -->
-          <div class="d-grid gap-2 mt-3">
-            <button type="submit" class="btn btn-dark btn-sm">Применить</button>
-            <a href="/catalog" class="btn btn-outline-danger btn-sm">Сбросить</a>
-          </div>
-        </div>
-      </form>
-      
-    </div>
-  </div>
-  <div class="col-md-8 col-12">
-    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-2 g-3">
-      {% for article in articles %}
-      <div class="col">
-        <div class="card shadow-sm bg-dark h-100 transition-all hover:shadow-lg">
-
-          <a href="/article/{{article.id}}">
-            <img src="../static/img/upload/{{article.image_name}}" 
-                 class="card-img-top" 
-                 style="height: 180px; object-fit: cover;" 
-                 alt="{{article.title}}">
-          </a>
-          <div class="card-body">
-            <h6 class="card-text text-white text-truncate">{{article.title}}</h6>
-              <p class="text-white"><small>{{article.category}}</small>  </p>
-              
-            <div class="d-flex justify-content-between align-items-center">
-              <a href="/article/{{article.id}}" class="btn btn-sm btn-outline-light align-self-center">Подробнее</a>
-              <div class="text-end">
-                  <div class="average-rating my-1 text-white" title="Средний рейтинг {{ "%.1f"|format(article.average_rating) }} из 5">
-        {% set avg_rating = article.average_rating %}
-        {% set full_stars = avg_rating|int %}
-        {% set has_half_star = (avg_rating - full_stars) >= 0.5 %}
-        
-        {% for i in range(1, 6) %}
-            {% if i <= full_stars %}
-                <i class="bi bi-star-fill text-warning"></i>
-            {% elif i == full_stars + 1 and has_half_star %}
-                <i class="bi bi-star-half text-warning"></i>
-            {% else %}
-                <i class="bi bi-star text-secondary"></i>
-            {% endif %}
-        {% endfor %}
-    </div>
-                <div class="text-white fw-bold fs-5">{{article.price}} руб.</div>
+        <!-- Модальное окно добавления -->
+        <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+              <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Добавить товар</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Название</label>
+                    <input type="text" class="form-control form-control-lg" name="title" placeholder="Введите название" required>
+                    <div class="invalid-feedback">Пожалуйста, введите название</div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Категория</label>
+                      <input type="text" class="form-control" name="category" placeholder="Категория" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Цена (руб.)</label>
+                      <input type="number" class="form-control" name="price" placeholder="Цена" required>
+                    </div>
+                  </div>
+            
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Изображение</label>
+                    <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png" required>
+                    <div class="form-text">Рекомендуемый размер: 800x600px</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Описание</label>
+                    {{ ckeditor.create() }}
+                  </div>
+                  
+                  <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-danger">Добавить товар</button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  
+        {%endif%}
 
-</div>
+        <!-- Флэш-сообщения -->
+        {% with messages = get_flashed_messages(True) %}
+          {% if messages %}
+          <div class="mb-4">
+            {% for category, message in messages %}
+            <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+              {{message}}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Заголовок поиска -->
+        {%if search%}
+        <div class="alert alert-info mb-4">
+          <h4 class="alert-heading"><i class="bi bi-search me-2"></i>Результаты поиска</h4>
+          <p class="mb-0">По запросу: <strong>"{{search.replace('%', '').lower()}}"</strong></p>
+        </div>
+        {%endif%}
+
+        <!-- Сообщение о пустом списке -->
+        {%if not articles%}
+        <div class="text-center py-5 my-5">
+          <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
+          <h3 class="fw-bold mb-3">Список пуст!</h3>
+          <p class="text-muted">Попробуйте изменить параметры поиска или вернитесь позже</p>
+          <a href="/catalog" class="btn btn-danger mt-3">Сбросить фильтры</a>
+        </div>
+        {%endif%}
+
+        <div class="row g-4">
+          <!-- Фильтры -->
+          <div class="col-lg-3 d-none d-lg-block">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Фильтры</h5>
+              </div>
+              <div class="card-body">
+                <form action="/catalog" method="get">
+                  <div class="mb-4">
+                    <label class="form-label fw-bold">Категория</label>
+                    <select name="category" class="form-select">
+                      <option value="">Все категории</option>
+                      {% for category in articles_category %}
+                      <option value="{{ category.category }}" 
+                              {% if request.args.get('category') == category.category %}selected{% endif %}>
+                          {{ category.category }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label class="form-label fw-bold">Ценовой диапазон</label>
+                    <div class="input-group mb-2">
+                      <span class="input-group-text">От</span>
+                      <input type="number" class="form-control" name="min_price" {% if request.args.get('min_price') %} value="{{request.args.get('min_price')}}" {%else%}value="{{min_price_placeholder}}"{% endif %}  placeholder="Минимум">
+                    </div>
+                    <div class="input-group">
+                      <span class="input-group-text">До</span>
+                      <input type="number" class="form-control" name="max_price" {% if request.args.get('max_price') %} value="{{request.args.get('max_price')}}" {%else%}value="{{max_price_placeholder}}"{% endif %} placeholder="Максимум">
+                    </div>
+                  </div>
+                  
+                  <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-danger">
+                      <i class="bi bi-check-circle me-2"></i>Применить
+                    </button>
+                    <a href="/catalog" class="btn btn-outline-danger">
+                      <i class="bi bi-x-circle me-2"></i>Сбросить
+                    </a>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Товары -->
+          <div class="col-lg-9">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+              {% for article in articles %}
+              <div class="col">
+                <div class="card h-100 border-0 shadow-sm product-card transition-all">
+                  <div class="badge bg-danger position-absolute" style="top: 0.5rem; right: 0.5rem;">
+                    {{article.category}}
+                  </div>
+                  <a href="/article/{{article.id}}" class="product-image">
+                    <img src="../static/img/upload/{{article.image_name}}" 
+                         class="card-img-top" 
+                         style="height: 200px; object-fit: cover;"
+                         alt="{{article.title}}">
+                    <div class="product-overlay"></div>
+                  </a>
+                  <div class="card-body">
+                    <h5 class="card-title fw-bold mb-2">{{article.title}}</h5>
+                    
+                    <div class="rating mb-2">
+                      {% set avg_rating = article.average_rating %}
+                      {% set full_stars = avg_rating|int %}
+                      {% set has_half_star = (avg_rating - full_stars) >= 0.5 %}
+                      
+                      {% for i in range(1, 6) %}
+                          {% if i <= full_stars %}
+                              <i class="bi bi-star-fill text-warning"></i>
+                          {% elif i == full_stars + 1 and has_half_star %}
+                              <i class="bi bi-star-half text-warning"></i>
+                          {% else %}
+                              <i class="bi bi-star text-secondary"></i>
+                          {% endif %}
+                      {% endfor %}
+                      <small class="text-muted ms-1">({{ "%.1f"|format(article.average_rating) }})</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                      <h5 class="text-danger mb-0">{{article.price}} руб.</h5>
+                      <a href="/article/{{article.id}}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-eye me-1"></i>Подробнее
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Пагинация -->
+            {% if articles %}
+            <nav aria-label="Page navigation" class="mt-5">
+              <ul class="pagination justify-content-center">
+                  {% if pagination.has_prev %}
+                      <li class="page-item">
+                          <a class="page-link" href="{{ url_for('catalog', page=pagination.prev_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price')) }}" aria-label="Previous">
+                              <span aria-hidden="true">&laquo;</span>
+                          </a>
+                      </li>
+                  {% else %}
+                      <li class="page-item disabled">
+                          <span class="page-link">&laquo;</span>
+                      </li>
+                  {% endif %}
+
+                  {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
+                      {% if page_num %}
+                          {% if page_num == pagination.page %}
+                              <li class="page-item active" aria-current="page">
+                                  <span class="page-link bg-danger border-danger">{{ page_num }}</span>
+                              </li>
+                          {% else %}
+                              <li class="page-item">
+                                  <a class="page-link" href="{{ url_for('catalog', page=page_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price')) }}">{{ page_num }}</a>
+                              </li>
+                          {% endif %}
+                      {% else %}
+                          <li class="page-item disabled">
+                              <span class="page-link">...</span>
+                          </li>
+                      {% endif %}
+                  {% endfor %}
+
+                  {% if pagination.has_next %}
+                      <li class="page-item">
+                          <a class="page-link" href="{{ url_for('catalog', page=pagination.next_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price')) }}" aria-label="Next">
+                              <span aria-hidden="true">&raquo;</span>
+                          </a>
+                      </li>
+                  {% else %}
+                      <li class="page-item disabled">
+                          <span class="page-link">&raquo;</span>
+                      </li>
+                  {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </main>
+{% endblock %}
 
-    {% endblock %}
+{% block script %}
+<script>
+// Валидация формы
+(function () {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
+{% endblock %}

@@ -5,19 +5,22 @@ MOTOSHOP
 
 {% block main %}
     <main>
-      <div id="myCarousel" class="carousel slide mb-6" data-bs-ride="carousel">
+      <!-- Улучшенный карусель с анимацией и затемнением -->
+      <div id="myCarousel" class="carousel slide mb-6" data-bs-ride="carousel" data-bs-interval="5000">
         <div class="carousel-inner">
           <div class="carousel-item active">
-            <img src="../static/img/slide1.jpg" width="100%" alt="" />
+            <div class="carousel-image-wrapper">
+              <img src="../static/img/slide1.jpg" class="d-block w-100" alt="Адреналин и свобода">
+              <div class="carousel-overlay"></div>
+            </div>
             <div class="container">
-              <div class="carousel-caption">
-                <h1>Адреналин и свобода!</h1>
-                <p class="opacity-75">
-                  Подчеркивает эмоции и ощущения, которые испытывают
-                  мотоциклисты.
+              <div class="carousel-caption text-start animate__animated animate__fadeInLeft">
+                <h1 class="display-3 fw-bold">Адреналин и свобода!</h1>
+                <p class="opacity-75 fs-5">
+                  Подчеркивает эмоции и ощущения, которые испытывают мотоциклисты.
                 </p>
                 <p>
-                  <a class="btn btn-lg btn-outline-light" href="/catalog"
+                  <a class="btn btn-lg btn-danger px-4 py-2 rounded-pill" href="/catalog"
                     >Посмотреть предложения</a
                   >
                 </p>
@@ -25,13 +28,16 @@ MOTOSHOP
             </div>
           </div>
           <div class="carousel-item">
-            <img src="../static/img/slide2.jpg" width="100%" alt="" />
+            <div class="carousel-image-wrapper">
+              <img src="../static/img/slide2.jpg" class="d-block w-100" alt="Свобода. Скорость. Драйв">
+              <div class="carousel-overlay"></div>
+            </div>
             <div class="container">
-              <div class="carousel-caption">
-                <h1>Свобода. Скорость. Драйв.</h1>
-                <p>Кратко и емко передает основные ценности мотоциклистов.</p>
+              <div class="carousel-caption animate__animated animate__fadeInDown">
+                <h1 class="display-3 fw-bold">Свобода. Скорость. Драйв.</h1>
+                <p class="fs-5">Кратко и емко передает основные ценности мотоциклистов.</p>
                 <p>
-                  <a class="btn btn-lg btn-outline-light" href="/catalog"
+                  <a class="btn btn-lg btn-danger px-4 py-2 rounded-pill" href="/catalog"
                     >Посмотреть предложения</a
                   >
                 </p>
@@ -39,16 +45,19 @@ MOTOSHOP
             </div>
           </div>
           <div class="carousel-item">
-            <img src="../static/img/slide3.jpg" width="100%" alt="" />
+            <div class="carousel-image-wrapper">
+              <img src="../static/img/slide3.jpg" class="d-block w-100" alt="Твой способ самовыражения">
+              <div class="carousel-overlay"></div>
+            </div>
             <div class="container">
-              <div class="carousel-caption">
-                <h1>Твой способ самовыражения на дороге.</h1>
-                <p>
+              <div class="carousel-caption text-end animate__animated animate__fadeInRight">
+                <h1 class="display-3 fw-bold">Твой способ самовыражения на дороге.</h1>
+                <p class="fs-5">
                   Подходит для тех, кто видит в мотоцикле не просто средство
                   передвижения, а способ показать свою индивидуальность.
                 </p>
                 <p>
-                  <a class="btn btn-lg btn-outline-light" href="/catalog"
+                  <a class="btn btn-lg btn-danger px-4 py-2 rounded-pill" href="/catalog"
                     >Посмотреть предложения</a
                   >
                 </p>
@@ -76,170 +85,219 @@ MOTOSHOP
         </button>
       </div>
 
-      <div class="bg-dark">
-        <div class="container text-white d-flex justify-content-center aling-items-center text-center">
-          <div class="my-5">
-            <h1>До закрытия мотосезона осталось:</h1>
-            <h2 id="timer"></h2>
-         
+      <!-- Таймер с градиентным фоном -->
+      <div class="bg-gradient py-5 bg-dark" >
+        <div class="container text-center text-white py-4">
+          <h1 class="display-5 mb-4">До закрытия мотосезона осталось:</h1>
+          <div class="countdown-timer">
+            <h2 id="timer" class="display-4 fw-bold text-danger"></h2>
           </div>
         </div>
-            
       </div>
-    
 
-      <div class=" marketing">
+      <!-- Особенности с иконками и анимациями -->
+      <div class="marketing py-5">
         <div class="container">
-          <div class="row featurette my-5">
-            <div class="col-md-7 d-flex flex-column justify-content-center">
-              <h2 class="featurette-heading fw-normal lh-1">
+          <div class="row featurette align-items-center my-5 py-4">
+            <div class="col-md-7 d-flex flex-column justify-content-center pe-5">
+              <div class="feature-icon mb-4">
+                <i class="bi bi-speedometer2 fs-1 text-danger"></i>
+              </div>
+              <h2 class="featurette-heading fw-bold mb-4">
                 Свобода передвижения
               </h2>
-              <p class="lead">
+              <p class="lead fs-5">
                 Мотоцикл предоставляет уникальное чувство свободы. Вы можете легко
                 перемещаться по городу, избегая пробок и задержек, а также
                 отправляться в длительные путешествия по живописным маршрутам.
               </p>
             </div>
             <div class="col-md-5">
-              <img src="../static/img/1.jpg" width="100%" alt="" />
+              <img src="../static/img/1.jpg" class="img-fluid rounded-4 shadow-lg" width="100%" alt="Свобода передвижения" />
             </div>
           </div>
         </div>
-       
 
-        <div class="bg-dark">
-        <div class="container">
-        <div class="row featurette my-5">
-          
-          <div class="col-md-7 order-md-2 d-flex flex-column justify-content-center">
-            <h2 class="featurette-heading fw-normal lh-1 text-white">Экономия топлива</h2>
-            <p class="lead text-white">
-              Мотоциклы, как правило, более экономичны, чем автомобили. Они
-              потребляют меньше топлива, что делает их более выгодным вариантом
-              для ежедневных поездок.
-            </p>
+        <div class="bg-dark py-5">
+          <div class="container">
+            <div class="row featurette align-items-center my-5 py-4">
+              <div class="col-md-5 order-md-1">
+                <img src="../static/img/2.jpg" class="img-fluid rounded-4 shadow-lg" width="100%" alt="Экономия топлива" />
+              </div>
+              <div class="col-md-7 order-md-2 d-flex flex-column justify-content-center ps-5">
+                <div class="feature-icon mb-4">
+                  <i class="bi bi-fuel-pump fs-1 text-danger"></i>
+                </div>
+                <h2 class="featurette-heading fw-bold mb-4 text-white">Экономия топлива</h2>
+                <p class="lead fs-5 text-white">
+                  Мотоциклы, как правило, более экономичны, чем автомобили. Они
+                  потребляют меньше топлива, что делает их более выгодным вариантом
+                  для ежедневных поездок.
+                </p>
+              </div>
+            </div>
           </div>
-          <div class="col-md-5 order-md-1 ">
-            <img src="../static/img/2.jpg" width="100%" alt="" />
+        </div>
+        
+        <div class="container">
+          <div class="row featurette align-items-center my-5 py-4">
+            <div class="col-md-7 d-flex flex-column justify-content-center pe-5">
+              <div class="feature-icon mb-4">
+                <i class="bi bi-cash-coin fs-1 text-danger"></i>
+              </div>
+              <h2 class="featurette-heading fw-bold mb-4">
+                Низкие эксплуатационные расходы
+              </h2>
+              <p class="lead fs-5">
+                Обслуживание и страхование мотоцикла обычно обходятся дешевле, чем
+                у автомобиля. Это позволяет сэкономить на расходах.
+              </p>
+            </div>
+            <div class="col-md-5">
+              <img src="../static/img/3.jpg" class="img-fluid rounded-4 shadow-lg" width="100%" alt="Низкие расходы" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-       
-<div class="container">
-  <div class="row featurette my-5">
-    <div class="col-md-7 d-flex flex-column justify-content-center">
-      <h2 class="featurette-heading fw-normal lh-1 ">
-        Низкие эксплуатационные расходы
-      </h2>
-      <p class="lead ">
-        Обслуживание и страхование мотоцикла обычно обходятся дешевле, чем
-        у автомобиля. Это позволяет сэкономить на расходах.
-      </p>
-    </div>
-    <div class="col-md-5">
-      <img src="../static/img/3.jpg" width="100%" alt="" />
-    </div>
-  </div>
-</div>
-       
 
-      </div>
-        <!-- Three columns of text below the carousel -->
-         <div class="bg-dark">
-            <div class="container">
-              <div class="row my-5 text-center">
-                <h2 class="my-3">Отзывы наших клиентов</h2>
-                <div class="col-lg-4">
-                  <img src="../static/img/review1.jpg" class="review" width="140" alt="" />
-      
-                  <h2 class="fw-normal text-white">Анастасия</h2>
-                  <p class="text-white">Мотоцикл был доставлен в срок, причем быстрее, чем ожидала!)</p>
-                </div>
-                <!-- /.col-lg-4 -->
-                <div class="col-lg-4">
-                  <img src="../static/img/review2.jpg" class="review" width="140" alt="" />
-                  <h2 class="fw-normal text-white">Сергей</h2>
-                  <p class="text-white">
-                    Вежливое и внимательное отношение сотрудников, которые всегда
-                    готовы ответить на вопросы и помочь с выбором.
-                  </p>
-                </div>
-      
-                <div class="col-lg-4">
-                  <img src="../static/img/review3.jpg" class="review" width="140" alt="" />
-                  <h2 class="fw-normal text-white">Максим</h2>
-                  <p class="text-white">
-                    Хочу подчеркнуть профессионализм команды, которая работает честно
-                    и четко.
+      <!-- Отзывы с карточками -->
+      <div class="bg-dark py-5">
+        <div class="container">
+          <h2 class="text-center text-white mb-5 display-4 fw-bold">Отзывы наших клиентов</h2>
+          <div class="row g-4">
+            <div class="col-lg-4">
+              <div class="card h-100 border-0 bg-transparent">
+                <div class="card-body text-center p-4">
+                  <div class="review-img mx-auto mb-4">
+                    <img src="../static/img/review1.jpg" class="rounded-circle shadow" width="140" height="140" alt="Анастасия" />
+                  </div>
+                  <h3 class="fw-bold text-white">Анастасия</h3>
+                  <div class="rating mb-3 text-warning">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                  <p class="text-white-50 fs-5">
+                    "Мотоцикл был доставлен в срок, причем быстрее, чем ожидала!"
                   </p>
                 </div>
               </div>
             </div>
-         </div>
-      
-      
-
-      <div class="container">
-        <h2 class="text-center my-5">Популярные товары</h2>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-  
-{%for article in random_articles%}
-<div class="col">
-  <div class="card shadow-sm bg-dark">
-    <a href="/article/{{article.id}}">
-      <img src="../static/img/upload/{{article.image_name}}" width="100%" alt="" />
-    </a>
-
-    <div class="card-body">
-      <p class="card-text text-white">{{article.title}}</p>
-      <p class="text-white"><small>{{article.category}}</small>  </p>
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="btn-group">
-          <a
-            href="/article/{{article.id}}"
-            class="btn btn-sm btn-outline-light"
-            >Просмотр</a
-          >
+            
+            <div class="col-lg-4">
+              <div class="card h-100 border-0 bg-transparent">
+                <div class="card-body text-center p-4">
+                  <div class="review-img mx-auto mb-4">
+                    <img src="../static/img/review2.jpg" class="rounded-circle shadow" width="140" height="140" alt="Сергей" />
+                  </div>
+                  <h3 class="fw-bold text-white">Сергей</h3>
+                  <div class="rating mb-3 text-warning">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-half"></i>
+                  </div>
+                  <p class="text-white-50 fs-5">
+                    "Вежливое и внимательное отношение сотрудников, которые всегда
+                    готовы ответить на вопросы и помочь с выбором."
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-4">
+              <div class="card h-100 border-0 bg-transparent">
+                <div class="card-body text-center p-4">
+                  <div class="review-img mx-auto mb-4">
+                    <img src="../static/img/review3.jpg" class="rounded-circle shadow" width="140" height="140" alt="Максим" />
+                  </div>
+                  <h3 class="fw-bold text-white">Максим</h3>
+                  <div class="rating mb-3 text-warning">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                  <p class="text-white-50 fs-5">
+                    "Хочу подчеркнуть профессионализм команды, которая работает честно
+                    и четко."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <small class="text-body-white text-white">{{article.price}} руб.</small>
       </div>
-    </div>
-  </div>
-</div>
-{%endfor%}
 
+      <!-- Популярные товары с ховер-эффектами -->
+      <div class="container py-5">
+        <h2 class="text-center mb-5 display-4 fw-bold">Популярные товары</h2>
+        <div class="row g-4">
+          {%for article in random_articles%}
+          <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 h-100 product-card">
+              <a href="/article/{{article.id}}" class="product-image">
+                <img src="../static/img/upload/{{article.image_name}}" class="card-img-top" alt="{{article.title}}" />
+                <div class="product-overlay"></div>
+              </a>
+              <div class="card-body">
+                <h5 class="card-title fw-bold">{{article.title}}</h5>
+                <p class="text-muted"><small>{{article.category}}</small></p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="btn-group">
+                    <a href="/article/{{article.id}}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                      Подробнее
+                    </a>
+                  </div>
+                  <span class="price fw-bold fs-5">{{article.price}} руб.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {%endfor%}
         </div>
-        <div class="text-end my-3">
-          <a href="/catalog" class="btn btn-outline-dark"
-            >Смотреть все предложения</a
-          >
+        <div class="text-center mt-5">
+          <a href="/catalog" class="btn btn-danger btn-lg px-4 py-2 rounded-pill">
+            Смотреть все предложения <i class="bi bi-arrow-right ms-2"></i>
+          </a>
         </div>
       </div>
     </main>
-    {% endblock %}
-    {% block script %}
-    <script>
-      const targetDate = new Date("2025-10-01T00:00:00").getTime();
+{% endblock %}
 
-      function updateTimer() {
-          const now = new Date().getTime();
-          const distance = targetDate - now;
+{% block script %}
+<script>
+  const targetDate = new Date("2025-10-01T00:00:00").getTime();
 
-          const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+  function updateTimer() {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
 
-          document.getElementById("timer").innerHTML = days + " дней | " + hours + " часов | " + minutes + " минут | " + seconds + " секунд ";
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-          if (distance < 0) {
-              clearInterval(x);
-              document.getElementById("timer").innerHTML = "Время истекло";
-          }
+      document.getElementById("timer").innerHTML = `
+        <span class="countdown-box">${days}<small>дней</small></span>
+        <span class="countdown-separator">:</span>
+        <span class="countdown-box">${hours}<small>часов</small></span>
+        <span class="countdown-separator">:</span>
+        <span class="countdown-box">${minutes}<small>минут</small></span>
+        <span class="countdown-separator">:</span>
+        <span class="countdown-box">${seconds}<small>секунд</small></span>
+      `;
+
+      if (distance < 0) {
+          clearInterval(x);
+          document.getElementById("timer").innerHTML = "Мотосезон закрыт!";
       }
+  }
 
-      const x = setInterval(updateTimer, 100);
-  </script>
-     {% endblock %}
+  const x = setInterval(updateTimer, 1000);
+</script>
+{% endblock %}

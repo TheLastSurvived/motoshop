@@ -4,17 +4,18 @@
 {% endblock %}
 
 {% block main %}
-    <div class="container my-5">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item"><a href="/">Главная</a></li>
-              <li class="breadcrumb-item active" aria-current="page">Услуги</li>
-              <li class="breadcrumb-item active" aria-current="page">{{service.title}}</li>
-            </ol>
-          </nav>
+    <div class="container my-3">
+
+          <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb bg-light rounded-3 px-3 py-2 shadow-sm">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Главная</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-tools me-1"></i>Услуги</li>
+            <li class="breadcrumb-item active  text-danger fw-bold" aria-current="page"> <i class="bi bi-wrench me-2"></i>{{service.title}}</li>
+          </ol>
+        </nav>
      
         <h1>{{service.title}}</h1>
-        <hr>
+      
         <div class="row">
           <div class="col-md-4">
             <div class="card shadow-sm sticky-top" style="top: 20px;">
@@ -26,8 +27,8 @@
                 <h3><i class="bi bi-envelope"></i> Email</h3>
                 <p>info@motoshop.ru</p>
                 <h3><i class="bi bi-clock"></i> Часы работы</h3>
-                <p>Пн-Пт: 9:00 - 18:00</p>
-                <p>Сб-Вс: 10:00 - 16:00</p>
+                <p>9:00 - 21:00</p>
+               
                 <form id="feedbackForm" method="POST" action="/send_feedback" >
                   <input type="hidden" name="service_id" value="{{ service.id }}">
                   

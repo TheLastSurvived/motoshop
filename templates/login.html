@@ -1,66 +1,108 @@
 {% extends 'base.html' %}
 {% block title %}
-Вход
+Вход | MOTOSHOP
 {% endblock %}
 
 {% block main %}
+<main class="bg-light">
+  <div class="container my-3">
+    <!-- Хлебные крошки -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb bg-white rounded-3 px-3 py-2 shadow-sm">
+        <li class="breadcrumb-item"><a href="/" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Главная</a></li>
+        <li class="breadcrumb-item active text-danger fw-bold" aria-current="page"><i class="bi bi-box-arrow-in-right me-1"></i>Вход</li>
+      </ol>
+    </nav>
 
-    <main>
-      <div class="container my-3">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item "><a href="/">Главная</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Вход</li>
-          </ol>
-        </nav>
-        <div class="form">
-          <form class="w-50 m-auto" method="post">
+    <!-- Форма входа -->
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+              <h2 class="fw-bold">Добро пожаловать</h2>
+              <p class="text-muted">Войдите в свой аккаунт</p>
+            </div>
+
+            <!-- Флэш-сообщения -->
             {% with messages = get_flashed_messages(True) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <p class="m-2 flash {{category}} text-center">{{message}}</p>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-            <h1 class="text-center">Вход</h1>
-            <div class="mb-3">
-              <label for="exampleInputEmail1" class="form-label">Email</label>
-              <input
-                type="email"
-                class="form-control"
-                id="exampleInputEmail1"
-                aria-describedby="emailHelp"
-                required
-                placeholder="Email"
-                name="email"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="exampleInputPassword1" class="form-label"
-                >Пароль</label
-              >
-              <input
-                type="password"
-                class="form-control"
-                id="exampleInputPassword1"
-                required
-                placeholder="Пароль"
-                name="password"
-              />
-            </div>
+              {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{category}} alert-dismissible fade show mb-4" role="alert">
+                  {{message}}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
 
-            <div class="d-flex justify-content-center">
-              <button type="submit" class="btn btn-dark d-flex">
-                Войти
-              </button>
-            </div>
+            <form method="post" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Email</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input type="email" class="form-control" placeholder="example@mail.com" name="email" required>
+                </div>
+              </div>
 
-            <p class="text-center my-3">
-              Нет аккаунта? <a href="/reg" class="link-dark">Зарегистрироваться!</a>
-            </p>
-          </form>
+              <div class="mb-4">
+                <label class="form-label fw-bold">Пароль</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                  <input type="password" class="form-control" placeholder="Введите ваш пароль" name="password" required>
+                  <button class="btn btn-outline-secondary toggle-password" type="button">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+
+              </div>
+
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-danger btn-lg rounded-pill py-2">
+                  <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                </button>
+              </div>
+
+              <div class="text-center">
+                <p class="mb-0">Еще нет аккаунта? <a href="/reg" class="text-danger fw-bold">Зарегистрироваться</a></p>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </main>
+    </div>
+  </div>
+</main>
 
-    {% endblock %}
+<script>
+// Показать/скрыть пароль
+document.querySelectorAll('.toggle-password').forEach(button => {
+  button.addEventListener('click', function() {
+    const input = this.parentElement.querySelector('input');
+    const icon = this.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  });
+});
+
+// Валидация формы
+(function () {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
+{% endblock %}
