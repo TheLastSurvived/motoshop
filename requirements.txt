@@ -36,3 +36,4 @@ urllib3
 visitor            
 Werkzeug           
 WTForms 
+Flask-Migrate

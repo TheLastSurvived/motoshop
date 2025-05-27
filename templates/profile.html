@@ -96,10 +96,11 @@
                         <div class="rating-stars">
                             {% for i in range(5, 0, -1) %}
                                 <input type="radio" id="star{{i}}-{{order.article.id}}" name="rating" value="{{i}}" 
-                                    {% if order.article.user_rating and order.article.user_rating.rating == i %}checked{% endif %}>
+                                    {% if order.article.user_rating is defined and order.article.user_rating.rating == i %}checked{% endif %}>
                                 <label for="star{{i}}-{{order.article.id}}">★</label>
                             {% endfor %}
                         </div>
+                        <button type="submit" style="display: none;"></button>
                     </form>
                 </td>
                 <td>
@@ -160,4 +161,20 @@
         </div>
     </div>
 
+  
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingForms = document.querySelectorAll('.rating-form');
+    
+    ratingForms.forEach(form => {
+        const stars = form.querySelectorAll('input[type="radio"]');
+        
+        stars.forEach(star => {
+            star.addEventListener('change', function() {
+                form.submit();
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

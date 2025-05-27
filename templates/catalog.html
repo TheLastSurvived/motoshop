@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-Каталог мотоциклов | MOTOSHOP
+Каталог мотоциклов 
 {% endblock %}
 
 {% block main %}
@@ -55,6 +55,12 @@
                     <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png" required>
                     <div class="form-text">Рекомендуемый размер: 800x600px</div>
                   </div>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Объём двигателя куб. см</label>
+                    <input type="number" name="engine_size" class="form-control" min="1" max="1000" value="1" required>
+                    
+                  </div>
                   
                   <div class="mb-3">
                     <label class="form-label fw-bold">Описание</label>
@@ -95,14 +101,7 @@
         {%endif%}
 
         <!-- Сообщение о пустом списке -->
-        {%if not articles%}
-        <div class="text-center py-5 my-5">
-          <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
-          <h3 class="fw-bold mb-3">Список пуст!</h3>
-          <p class="text-muted">Попробуйте изменить параметры поиска или вернитесь позже</p>
-          <a href="/catalog" class="btn btn-danger mt-3">Сбросить фильтры</a>
-        </div>
-        {%endif%}
+       
 
         <div class="row g-4">
           <!-- Фильтры -->
@@ -113,6 +112,22 @@
               </div>
               <div class="card-body">
                 <form action="/catalog" method="get">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Сортировка</label>
+                        <select name="sort_by" class="form-select">
+                            <option value="">По умолчанию</option>
+                            <option value="popular" {% if request.args.get('sort_by') == 'popular' %}selected{% endif %}>
+                                Самые популярные
+                            </option>
+                            <option value="cheapest" {% if request.args.get('sort_by') == 'cheapest' %}selected{% endif %}>
+                                Сначала дешевые
+                            </option>
+                            <option value="expensive" {% if request.args.get('sort_by') == 'expensive' %}selected{% endif %}>
+                                Сначала дорогие
+                            </option>
+                        </select>
+                    </div>
+
                   <div class="mb-4">
                     <label class="form-label fw-bold">Категория</label>
                     <select name="category" class="form-select">
@@ -136,6 +151,19 @@
                       <span class="input-group-text">До</span>
                       <input type="number" class="form-control" name="max_price" {% if request.args.get('max_price') %} value="{{request.args.get('max_price')}}" {%else%}value="{{max_price_placeholder}}"{% endif %} placeholder="Максимум">
                     </div>
+                  </div>      
+                  
+                  
+                  <div class="mb-4">
+                    <label class="form-label fw-bold">Объём двигателя</label>
+                    <div class="input-group mb-2">
+                      <span class="input-group-text">От</span>
+                      <input type="number" class="form-control" name="min_engine_size" {% if request.args.get('min_engine_size') %} value="{{request.args.get('min_engine_size')}}" {%else%}value="{{min_engine_size_placeholder}}"{% endif %}  placeholder="Минимум">
+                    </div>
+                    <div class="input-group">
+                      <span class="input-group-text">До</span>
+                      <input type="number" class="form-control" name="max_engine_size" {% if request.args.get('max_engine_size') %} value="{{request.args.get('max_engine_size')}}" {%else%}value="{{max_engine_size_placeholder}}"{% endif %} placeholder="Максимум">
+                    </div>
                   </div>
                   
                   <div class="d-grid gap-2">
@@ -153,7 +181,19 @@
 
           <!-- Товары -->
           <div class="col-lg-9">
+             {%if not articles%}
+               <div class="d-flex justify-content-center align-items-center">
+                  <div class="text-center py-5 my-5">
+                  <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
+                  <h3 class="fw-bold mb-3">Список пуст!</h3>
+                  <p class="text-muted">Попробуйте изменить параметры поиска или вернитесь позже</p>
+                  <a href="/catalog" class="btn btn-danger mt-3">Сбросить фильтры</a>
+                </div>
+               </div>
+                
+                {%endif%}
             <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+              
               {% for article in articles %}
               <div class="col">
                 <div class="card h-100 border-0 shadow-sm product-card transition-all">
@@ -205,7 +245,7 @@
               <ul class="pagination justify-content-center">
                   {% if pagination.has_prev %}
                       <li class="page-item">
-                          <a class="page-link" href="{{ url_for('catalog', page=pagination.prev_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price')) }}" aria-label="Previous">
+                          <a class="page-link" href="{{ url_for('catalog', page=pagination.prev_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), max_engine_size = request.args.get('max_engine_size'), min_engine_size = request.args.get('min_engine_size')) }}" aria-label="Previous">
                               <span aria-hidden="true">&laquo;</span>
                           </a>
                       </li>
@@ -223,7 +263,7 @@
                               </li>
                           {% else %}
                               <li class="page-item">
-                                  <a class="page-link" href="{{ url_for('catalog', page=page_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price')) }}">{{ page_num }}</a>
+                                  <a class="page-link" href="{{ url_for('catalog', page=page_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), max_engine_size = request.args.get('max_engine_size'), min_engine_size = request.args.get('min_engine_size') ) }}">{{ page_num }}</a>
                               </li>
                           {% endif %}
                       {% else %}
@@ -235,7 +275,7 @@
 
                   {% if pagination.has_next %}
                       <li class="page-item">
-                          <a class="page-link" href="{{ url_for('catalog', page=pagination.next_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price')) }}" aria-label="Next">
+                          <a class="page-link" href="{{ url_for('catalog', page=pagination.next_num, category=request.args.get('category'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), max_engine_size = request.args.get('max_engine_size'), min_engine_size = request.args.get('min_engine_size') ) }}" aria-label="Next">
                               <span aria-hidden="true">&raquo;</span>
                           </a>
                       </li>

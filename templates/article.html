@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-{{article.title}} | MOTOSHOP
+{{article.title}}
 {% endblock %}
 
 {% block main %}
@@ -59,7 +59,13 @@
                       <div class="form-text">Текущее изображение: {{article.image_name}}</div>
                     </div>
                   </div>
-                  
+
+                  {%if article.category != 'Экипировка'%}                    
+                  <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Объём двигателя куб. см</label>
+                      <input type="number" class="form-control" name="engine_size" value="{{article.engine_size}}" min="1" max="1000"  required>
+                    </div>
+                  {%endif%}
                   <div class="mb-3">
                     <label class="form-label fw-bold">Описание</label>
                     {{ ckeditor.create(value=article.text) }}
@@ -168,6 +174,9 @@
                   <div>
                     <h1 class="fw-bold mb-2">{{article.title}}</h1>
                     <span class="badge bg-danger rounded-pill mb-3">{{article.category}}</span>
+                    {%if article.category != 'Экипировка'%}
+                    <span class="badge bg-dark rounded-pill mb-3">Объём двигателя: {{article.engine_size}} куб. см</span>
+                    {%endif%}
                   </div>
                   <h2 class="text-danger fw-bold">{{article.price}} руб.</h2>
                 </div>

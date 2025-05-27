@@ -11,6 +11,7 @@ from flask_admin.contrib.sqlamodel import ModelView
 from flask_admin import Admin
 from cloudipsp import Api, Checkout
 import re
+from flask_migrate import Migrate
 
 
 app = Flask(__name__)
@@ -22,7 +23,7 @@ app.config['UPLOAD_FOLDER'] = 'static/img/upload'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 db = SQLAlchemy(app)
 ckeditor = CKEditor(app)
-
+migrate = Migrate(app, db)
 
 class Users(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -55,6 +56,7 @@ class Articles(db.Model):
     image_name = db.Column(db.String(100))
     category = db.Column(db.String(100))
     price = db.Column(db.Integer)
+    engine_size = db.Column(db.Integer)
     
     orders = db.relationship('Orders', backref='article', lazy=True)
     gallery_images = db.relationship('ArticleImages', backref='article', lazy=True, cascade="all, delete-orphan")
@@ -156,18 +158,22 @@ def index():
 def catalog(): 
     max_price_placeholder = db.session.query(func.max(Articles.price)).scalar()
     min_price_placeholder = db.session.query(func.min(Articles.price)).scalar()
+
+    min_engine_size_placeholder = db.session.query(func.min(Articles.engine_size)).scalar()
+    max_engine_size_placeholder = db.session.query(func.max(Articles.engine_size)).scalar()
     
     # Обработка формы добавления статьи (для администратора)
     if request.method == 'POST':
         title = request.form.get('title')
         category = request.form.get('category')
         price = request.form.get('price')
+        engine_size = request.form.get('engine_size')
         image = request.files['image']
         filename = secure_filename(image.filename)
         pic_name = str(uuid.uuid4()) + "_" + filename
         image.save("static/img/upload/" + pic_name)
         text = request.form.get('ckeditor')
-        article = Articles(title=title,category=category,price=price,image_name=pic_name,text=text)
+        article = Articles(title=title,category=category,price=price,image_name=pic_name,text=text,engine_size=engine_size)
         db.session.add(article)
         db.session.commit()
         flash("Запись добавлена!", category="ok")
@@ -178,11 +184,13 @@ def catalog():
     per_page = 6  # Количество элементов на странице
     
     # Получаем параметры фильтрации
+    min_engine_size = request.args.get('min_engine_size')
+    max_engine_size = request.args.get('max_engine_size')
     category = request.args.get('category')
     search = request.args.get('search')
     min_price = request.args.get('min_price')
     max_price = request.args.get('max_price')
-   
+    sort_by = request.args.get('sort_by')  # Новый параметр сортировки
     query = Articles.query
     
     # Применяем фильтры
@@ -196,11 +204,26 @@ def catalog():
             Articles.title.like(f"%{search}%") | 
             Articles.text.like(f"%{search}%")
         )
+    
+    if min_engine_size and category != "Экипировка":
+        query = query.filter(Articles.engine_size >= min_engine_size)
+    if max_engine_size and category != "Экипировка":
+        query = query.filter(Articles.engine_size <= max_engine_size)
    
     if min_price:
         query = query.filter(Articles.price >= min_price)
     if max_price:
         query = query.filter(Articles.price <= max_price)
+
+    if sort_by == 'popular':
+        query = query.outerjoin(Ratings).group_by(Articles.id).order_by(func.coalesce(func.avg(Ratings.rating), 0).desc())
+    elif sort_by == 'cheapest':
+        query = query.order_by(Articles.price.asc())
+    elif sort_by == 'expensive':
+        query = query.order_by(Articles.price.desc())
+    else:
+        # Сортировка по умолчанию
+        query = query.order_by(Articles.id.asc())
     
     # Применяем пагинацию
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -213,7 +236,10 @@ def catalog():
         max_price_placeholder=max_price_placeholder,
         search_query=search,
         min_price=min_price,
-        max_price=max_price)
+        max_price=max_price,
+        min_engine_size_placeholder=min_engine_size_placeholder,
+        max_engine_size_placeholder=max_engine_size_placeholder
+        )
 
 
 '''
@@ -233,30 +259,43 @@ def search():
 
 @app.route('/rate-article/<int:article_id>', methods=['POST'])
 def rate_article(article_id):
-    if not 'name' in session:
+    if 'name' not in session:
         abort(401)
     
     user = Users.query.filter_by(email=session['name']).first()
-    rating_value = int(request.form.get('rating'))
+    if not user:
+        abort(401)
     
+    rating_value = request.form.get('rating')
+    if not rating_value:
+        flash("Пожалуйста, выберите оценку", "error")
+        return redirect('/profile')
     
-    existing_rating = Ratings.query.filter_by(
-        id_user=user.id,
-        id_article=article_id
-    ).first()
+    rating_value = int(rating_value)
     
-    if existing_rating:
-        existing_rating.rating = rating_value
-    else:
-        new_rating = Ratings(
+    try:
+        existing_rating = Ratings.query.filter_by(
             id_user=user.id,
-            id_article=article_id,
-            rating=rating_value
-        )
-        db.session.add(new_rating)
+            id_article=article_id
+        ).first()
+        
+        if existing_rating:
+            existing_rating.rating = rating_value
+        else:
+            new_rating = Ratings(
+                id_user=user.id,
+                id_article=article_id,
+                rating=rating_value
+            )
+            db.session.add(new_rating)
+        
+        db.session.commit()
+        flash("Спасибо за вашу оценку!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("Произошла ошибка при сохранении оценки", "error")
+        app.logger.error(f'Error saving rating: {str(e)}')
     
-    db.session.commit()
-    flash("Спасибо за вашу оценку!", "ok")
     return redirect('/profile')
 
 
@@ -293,6 +332,7 @@ def article(id):
         
         # Остальная обработка формы (редактирование статьи)
         article.title = request.form.get('title')
+        article.engine_size = request.form.get('engine_size')
         article.category = request.form.get('category')
         article.price = request.form.get('price')
         article.text = request.form.get('ckeditor')
@@ -543,25 +583,20 @@ def reg():
             return redirect(url_for("reg"))
     return render_template("reg.html")
 
-
 @app.context_processor
 def inject_user():
     def get_user_name():
         if 'name' in session:
             user = Users.query.filter_by(email=session['name']).first()
             if user:
-                # Добавляем рейтинги пользователя к статьям
                 user_ratings = {r.id_article: r for r in Ratings.query.filter_by(id_user=user.id).all()}
                 for article in Articles.query.all():
                     article.user_rating = user_ratings.get(article.id)
             return user
-    return dict(active_user=get_user_name())
-
-
-@app.context_processor
-def inject_user():
     return dict(
-    articles_category=db.session.query(Articles.category).distinct().all(),
+        active_user=get_user_name(),
+        articles_category=db.session.query(Articles.category).distinct().all(),
+        services=db.session.query(Services).all()
     )
 
 
