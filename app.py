@@ -148,7 +148,7 @@ admin.add_view(OrdersView(Orders, db.session))
 @app.route('/', methods=['GET', 'POST'])
 def index():
    
-    random_articles = Articles.query.order_by(func.random()).limit(3).all()
+    random_articles = Articles.query.order_by(func.random()).limit(4).all()
     return render_template("index.html",random_articles=random_articles)
 
 

@@ -59,7 +59,7 @@
             </li>
           </ul>
           
-          <form class="d-flex me-3" role="search" action="/catalog" method="get">
+          <form class="d-flex me-3 my-3" role="search" action="/catalog" method="get">
             <div class="input-group">
               <input type="search" class="form-control bg-dark text-white border-white" name="search" placeholder="Поиск товаров..." aria-label="Search">
               <button class="btn btn-danger border-white" type="submit">
@@ -73,7 +73,7 @@
               <div class="dropdown">
                 <a href="#" class="btn btn-outline-light dropdown-toggle d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown">
                   <i class="bi bi-person-circle me-2"></i>
-                  <span class="d-none d-lg-inline">{{ session['name'] }}</span>
+                  <span class="d-none d-md-inline">{{ session['name'] }}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
                   <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i> Профиль</a></li>

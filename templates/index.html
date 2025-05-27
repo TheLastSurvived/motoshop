@@ -238,7 +238,7 @@ MOTOSHOP
         <h2 class="text-center mb-5 display-4 fw-bold">Популярные товары</h2>
         <div class="row g-4">
           {%for article in random_articles%}
-          <div class="col-lg-4 col-md-6">
+          <div class="col-lg-3 col-md-6">
             <div class="card shadow-sm border-0 h-100 product-card">
               <a href="/article/{{article.id}}" class="product-image">
                 <img src="../static/img/upload/{{article.image_name}}" class="card-img-top" alt="{{article.title}}" />
