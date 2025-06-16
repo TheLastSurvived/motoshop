@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block title %}
+{{post.title}}
+{% endblock %}
+
+{% block main %}
+{{ ckeditor.load() }}
+    <main class="py-4">
+      <div class="container">
+        <!-- Хлебные крошки -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb bg-light rounded-3 px-3 py-2 shadow-sm">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Главная</a></li>
+            <li class="breadcrumb-item"><a href="/blog" class="text-decoration-none"><i class="bi bi-journal-text me-1"></i>Блог</a></li>
+            <li class="breadcrumb-item active text-danger fw-bold" aria-current="page"> <i class="bi bi-file-text me-1"></i>{{post.title}}</li>
+          </ol>
+        </nav>
+
+        <!-- Кнопки администратора -->
+        {%if 'name' in session and active_user.root==1%}
+        <div class="d-flex gap-2 mb-4">
+          <a href="/edit-blog-post/{{post.id}}" class="btn btn-warning rounded-pill px-4">
+            <i class="bi bi-pencil-square me-2"></i>Редактировать
+          </a>
+          <a href="/delete-blog-post/{{post.id}}" class="btn btn-danger rounded-pill px-4" onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">
+            <i class="bi bi-trash me-2"></i>Удалить
+          </a>
+        </div>
+        {%endif%}
+
+        <!-- Флэш-сообщения -->
+        {% with messages = get_flashed_messages(True) %}
+          {% if messages %}
+          <div class="mb-4">
+            {% for category, message in messages %}
+            <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+              {{message}}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+          <!-- Основное содержимое поста -->
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+              <img src="../static/img/upload/{{post.image_name}}" 
+                   class="card-img-top rounded-top" 
+                   style="height: 400px; object-fit: cover;"
+                   alt="{{post.title}}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <span class="badge bg-danger">{{post.category}}</span>
+                  <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>{{post.created_at.strftime('%d.%m.%Y')}}
+                    <i class="bi bi-eye ms-3 me-1"></i>{{post.views}}
+                  </small>
+                </div>
+                
+                <h1 class="fw-bold mb-4">{{post.title}}</h1>
+                
+                <div class="post-content mb-5">
+                  {% autoescape false %} {{post.content}} {% endautoescape %}
+                </div>
+                
+                <div class="border-top pt-4">
+                  <h5 class="fw-bold mb-3">Теги:</h5>
+                  <div class="d-flex flex-wrap gap-2 mb-4">
+                    {% for tag in post.tags.split(',') %}
+                    <a href="/blog?search={{tag.strip()}}" class="btn btn-sm btn-outline-dark rounded-pill">{{tag.strip()}}</a>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Комментарии -->
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <h3 class="fw-bold mb-4">
+                  <i class="bi bi-chat-square-text me-2"></i>Комментарии ({{post.comments_count}})
+                </h3>
+                
+                {% if 'name' in session %}
+                <form method="post" class="mb-4" action="{{url_for('add_comment', post_id=post.id)}}">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Ваш комментарий</label>
+                    <textarea class="form-control" name="comment" rows="3" required></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-danger">Отправить</button>
+                </form>
+                {% else %}
+                <div class="alert alert-info mb-4">
+                  <i class="bi bi-info-circle me-2"></i>Чтобы оставить комментарий, пожалуйста <a href="/login" class="alert-link">войдите</a> или <a href="/reg" class="alert-link">зарегистрируйтесь</a>
+                </div>
+                {% endif %}
+                
+                <div class="comments-list">
+                  {% for comment in post.comments %}
+                  <div class="comment mb-4 pb-4 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div class="d-flex align-items-center">
+                        
+                        <div>
+                          <h6 class="mb-0 fw-bold">{{comment.user_name}}</h6>
+                          <small class="text-muted">{{comment.created_at.strftime('%d.%m.%Y в %H:%M')}}</small>
+                        </div>
+                      </div>
+                      {% if 'name' in session and (active_user.id == comment.user_id or active_user.root == 1) %}
+                      <a href="/delete-comment/{{comment.id}}" class="text-danger" onclick="return confirm('Удалить этот комментарий?')">
+                        <i class="bi bi-trash"></i>
+                      </a>
+                      {% endif %}
+                    </div>
+                    <p class="mb-0">{{comment.text}}</p>
+                  </div>
+                  {% else %}
+                  <div class="text-center py-4">
+                    <i class="bi bi-chat-square-text fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Комментариев пока нет. Будьте первым!</p>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Боковая панель -->
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Информация</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <h6 class="fw-bold">Дата публикации:</h6>
+                  <p class="mb-0">{{post.created_at.strftime('%d.%m.%Y')}}</p>
+                </div>
+                <div>
+                  <h6 class="fw-bold">Просмотров:</h6>
+                  <p class="mb-0">{{post.views}}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Популярные записи -->
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-fire me-2"></i>Популярные записи</h5>
+              </div>
+              <div class="card-body">
+                <div class="list-group list-group-flush">
+                  {% for popular_post in popular_posts %}
+                  <a href="/blog/{{popular_post.id}}" class="list-group-item list-group-item-action border-0 py-3">
+                    <div class="d-flex align-items-center">
+                      <img src="../static/img/upload/{{popular_post.image_name}}" 
+                           class="rounded me-3" 
+                           width="60" height="60" 
+                           style="object-fit: cover;"
+                           alt="{{popular_post.title}}">
+                      <div>
+                        <h6 class="mb-1">{{popular_post.title|truncate(30)}}</h6>
+                        <small class="text-muted">{{popular_post.created_at.strftime('%d.%m.%Y')}}</small>
+                      </div>
+                    </div>
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Категории -->
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-bookmark me-2"></i>Категории</h5>
+              </div>
+              <div class="card-body">
+                <div class="list-group list-group-flush">
+                  {% for category in blog_categories %}
+                  <a href="/blog?category={{category}}" 
+                     class="list-group-item list-group-item-action border-0 d-flex justify-content-between align-items-center py-2">
+                    {{category}}
+                    <span class="badge bg-danger rounded-pill">{{category_counts[category]}}</span>
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+{% endblock %}

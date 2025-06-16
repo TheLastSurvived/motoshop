@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}
+{% if post %}Редактирование записи{% else %}Добавление записи{% endif %}
+{% endblock %}
+
+{% block main %}
+{{ ckeditor.load() }}
+    <main class="py-4">
+      <div class="container">
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb bg-light rounded-3 px-3 py-2 shadow-sm">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Главная</a></li>
+            <li class="breadcrumb-item"><a href="/blog" class="text-decoration-none"><i class="bi bi-journal-text me-1"></i>Блог</a></li>
+            <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">
+              <i class="bi bi-pencil-square me-2"></i> {% if post %}Редактирование{% else %}Добавление{% endif %} записи
+            </li>
+          </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                  <i class="bi bi-pencil-square me-2"></i>
+                  {% if post %}Редактирование записи{% else %}Добавление новой записи{% endif %}
+                </h4>
+              </div>
+              <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Название</label>
+                    <input type="text" class="form-control" name="title" 
+                           value="{{ post.title if post }}" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Краткое описание</label>
+                    <textarea class="form-control" name="short_description" rows="3" required>{{ post.short_description if post }}</textarea>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Категория</label>
+                    <select class="form-select" name="category" required>
+                        <option value="" disabled>Выберите категорию</option>
+                        <option value="Советы по выбору мотоцикла" {% if post.category == "Советы по выбору мотоцикла" %}selected{% endif %}>Советы по выбору мотоцикла</option>
+                        <option value="Обзоры мотоциклов" {% if post.category == "Обзоры мотоциклов" %}selected{% endif %}>Обзоры мотоциклов</option>
+                        <option value="Покупка и продажа" {% if post.category == "Покупка и продажа" %}selected{% endif %}>Покупка и продажа</option>
+                        <option value="Мототехника и тюнинг" {% if post.category == "Мототехника и тюнинг" %}selected{% endif %}>Мототехника и тюнинг</option>
+                        <option value="Путешествия и мототуризм" {% if post.category == "Путешествия и мототуризм" %}selected{% endif %}>Путешествия и мототуризм</option>
+                        <option value="Безопасность и обучение" {% if post.category == "Безопасность и обучение" %}selected{% endif %}>Безопасность и обучение</option>
+                        <option value="Мотосообщество и события" {% if post.category == "Мотосообщество и события" %}selected{% endif %}>Мотосообщество и события</option>
+                        <option value="Юридические вопросы" {% if post.category == "Юридические вопросы" %}selected{% endif %}>Юридические вопросы</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Теги (через запятую)</label>
+                    <input type="text" class="form-control" name="tags" 
+                           value="{{ post.tags if post }}" 
+                           placeholder="Например: мотоциклы, ремонт, советы">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Изображение</label>
+                    <input type="file" class="form-control" name="image" {% if not post %}required{% endif %}>
+                    {% if post %}
+                    <div class="form-text">Текущее изображение: {{ post.image_name }}</div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label class="form-label fw-bold">Содержание</label>
+                    {{ ckeditor.create(name='content', value=post.content if post) }}
+                  </div>
+                  
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% if post %}{{ url_for('blog_post', post_id=post.id) }}{% else %}{{ url_for('blog') }}{% endif %}" 
+                       class="btn btn-outline-secondary me-md-2">
+                      Отмена
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                      {% if post %}Сохранить изменения{% else %}Добавить запись{% endif %}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+{% endblock %}

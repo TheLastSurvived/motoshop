@@ -219,3 +219,76 @@ footer {
 }
 
 
+/* Стили для блога */
+.post-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.post-content p {
+    margin-bottom: 1.2rem;
+    line-height: 1.6;
+}
+
+.post-content h2, 
+.post-content h3, 
+.post-content h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.post-content ul, 
+.post-content ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1.2rem;
+}
+
+.post-content li {
+    margin-bottom: 0.5rem;
+}
+
+.comment {
+    transition: all 0.3s ease;
+}
+
+.comment:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Анимации для карточек блога */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+
+/* Стили для блока популярных записей блога */
+.blog-post-image {
+    display: block;
+    overflow: hidden;
+    border-radius: 8px;
+    position: relative;
+}
+
+.blog-post-image img {
+    transition: transform 0.3s ease;
+}
+
+.blog-post-image:hover img {
+    transform: scale(1.05);
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}

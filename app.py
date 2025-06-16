@@ -12,6 +12,7 @@ from flask_admin import Admin
 from cloudipsp import Api, Checkout
 import re
 from flask_migrate import Migrate
+import os
 
 
 app = Flask(__name__)
@@ -34,6 +35,7 @@ class Users(db.Model):
     root = db.Column(db.Integer, default=0)
     
     orders = db.relationship('Orders', backref='user', lazy=True)
+    comments = db.relationship('Comment', backref='user_comment', lazy=True)
    
     def __repr__(self):
         return 'User %r' % self.id 
@@ -117,7 +119,42 @@ class Ratings(db.Model):
 
     def __repr__(self):
         return f'<Rating {self.rating} stars for article {self.id_article}>'
+
+
+class BlogPost(db.Model):
+    __tablename__ = 'blog_posts'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    short_description = db.Column(db.String(300), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    image_name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    tags = db.Column(db.String(200))
+    views = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
+    comments = db.relationship('Comment', backref='blog_post', lazy=True, cascade='all, delete-orphan')
+
+    @property
+    def comments_count(self):
+        return len(self.comments)
+    
+
+# Модель комментария
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('blog_posts.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    # Свойство для удобного доступа к имени пользователя
+    @property
+    def user_name(self):
+        return self.user.name if self.user else 'Аноним'
+
     
 class AdminIndex(AdminIndexView):
     @expose('/', methods=['GET', 'POST'])
@@ -149,9 +186,243 @@ admin.add_view(OrdersView(Orders, db.session))
     
 @app.route('/', methods=['GET', 'POST'])
 def index():
-   
+    popular_blog_posts = BlogPost.query.order_by(BlogPost.views.desc()).limit(3).all()
     random_articles = Articles.query.order_by(func.random()).limit(4).all()
-    return render_template("index.html",random_articles=random_articles)
+    return render_template("index.html",random_articles=random_articles, popular_blog_posts=popular_blog_posts)
+
+
+@app.route('/blog', methods=['GET', 'POST'])
+def blog(): 
+    page = request.args.get('page', 1, type=int)
+    per_page = 5
+    
+    # Фильтрация и сортировка
+    category = request.args.get('category', '')
+    sort_by = request.args.get('sort_by', 'newest')
+    search = request.args.get('search', '')
+    
+    query = BlogPost.query
+    
+    if category:
+        query = query.filter(BlogPost.category == category)
+    
+    if search:
+        query = query.filter(BlogPost.title.ilike(f'%{search}%') | 
+                           BlogPost.content.ilike(f'%{search}%') |
+                           BlogPost.tags.ilike(f'%{search}%'))
+    
+    # Сортировка
+    if sort_by == 'oldest':
+        query = query.order_by(BlogPost.created_at.asc())
+    elif sort_by == 'popular':
+        query = query.order_by(BlogPost.views.desc())
+    else:  # newest (по умолчанию)
+        query = query.order_by(BlogPost.created_at.desc())
+    
+    # Пагинация
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    blog_posts = pagination.items
+    
+    # Получаем категории для фильтра
+    categories = db.session.query(BlogPost.category).distinct().all()
+    blog_categories = [c[0] for c in categories]
+    
+    # Получаем популярные посты для сайдбара
+    popular_posts = BlogPost.query.order_by(BlogPost.views.desc()).limit(3).all()
+    
+    # Считаем количество постов в каждой категории
+    category_counts = {}
+    for cat in blog_categories:
+        count = BlogPost.query.filter_by(category=cat).count()
+        category_counts[cat] = count
+    
+    return render_template('blog.html', 
+                         blog_posts=blog_posts,
+                         pagination=pagination,
+                         blog_categories=blog_categories,
+                         popular_posts=popular_posts,
+                         category_counts=category_counts)
+
+
+@app.route('/blog/<int:post_id>')
+def blog_post(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    
+    # Увеличиваем счетчик просмотров
+    post.views += 1
+    db.session.commit()
+    
+    # Получаем комментарии
+    comments = Comment.query.filter_by(post_id=post_id).order_by(Comment.created_at.desc()).all()
+    
+    # Получаем популярные посты для сайдбара
+    popular_posts = BlogPost.query.order_by(BlogPost.views.desc()).limit(3).all()
+    
+    # Получаем категории для сайдбара
+    categories = db.session.query(BlogPost.category).distinct().all()
+    blog_categories = [c[0] for c in categories]
+    
+    # Считаем количество постов в каждой категории
+    category_counts = {}
+    for cat in blog_categories:
+        count = BlogPost.query.filter_by(category=cat).count()
+        category_counts[cat] = count
+    
+    return render_template('blog_post.html', 
+                         post=post,
+                         comments=comments,
+                         popular_posts=popular_posts,
+                         blog_categories=blog_categories,
+                         category_counts=category_counts)
+
+
+# Добавление записи блога (форма)
+@app.route('/add-blog-post', methods=['GET', 'POST'])
+def add_blog_post():
+    current_user = Users.query.filter_by(email=session['name']).first()
+    if current_user.root != 1:
+        flash('У вас нет прав для этого действия', 'danger')
+        return redirect(url_for('blog'))
+    
+    if request.method == 'POST':
+        title = request.form['title']
+        short_description = request.form['short_description']
+        content = request.form['content']
+        category = request.form['category']
+        tags = request.form.get('tags', '')
+        
+        # Обработка изображения
+        if 'image' not in request.files:
+            flash('Не выбрано изображение', 'danger')
+            return redirect(request.url)
+        
+        image = request.files['image']
+        if image.filename == '':
+            flash('Не выбрано изображение', 'danger')
+            return redirect(request.url)
+        
+        
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image_path = str(uuid.uuid4()) + "_" + filename
+            image.save("static/img/upload/" + image_path)
+            
+            # Создаем запись
+            new_post = BlogPost(
+                title=title,
+                short_description=short_description,
+                content=content,
+                image_name=image_path,
+                category=category,
+                tags=tags,
+            )
+            
+            db.session.add(new_post)
+            db.session.commit()
+            
+            flash('Запись успешно добавлена', 'success')
+            return redirect(url_for('blog_post', post_id=new_post.id))
+        
+        flash('Недопустимый формат изображения', 'danger')
+    
+    return render_template('add_blog_post.html')
+
+# Редактирование записи блога
+@app.route('/edit-blog-post/<int:post_id>', methods=['GET', 'POST'])
+def edit_blog_post(post_id):
+    current_user = Users.query.filter_by(email=session['name']).first()
+    post = BlogPost.query.get_or_404(post_id)
+    
+    if current_user.root != 1 and current_user.id != post.author_id:
+        flash('У вас нет прав для редактирования этой записи', 'danger')
+        return redirect(url_for('blog_post', post_id=post_id))
+    
+    if request.method == 'POST':
+        post.title = request.form['title']
+        post.short_description = request.form['short_description']
+        post.content = request.form['content']
+        post.category = request.form['category']
+        post.tags = request.form.get('tags', '')
+        post.updated_at = datetime.now()
+        
+        # Обработка нового изображения, если загружено
+        if 'image' in request.files:
+            image = request.files['image']
+            if image.filename != '' and allowed_file(image.filename):
+                # Удаляем старое изображение
+                old_image_path = os.path.join("static/img/upload/", post.image_name)
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
+                
+                # Сохраняем новое
+                filename = secure_filename(image.filename)
+                pic_name = str(uuid.uuid4()) + "_" + filename
+                image_path = os.path.join("static/img/upload/", pic_name)
+               
+                image.save(image_path)
+                post.image_name = pic_name
+        
+        db.session.commit()
+        flash('Запись успешно обновлена', 'success')
+        return redirect(url_for('blog_post', post_id=post.id))
+    
+    return render_template('edit_blog_post.html', post=post)
+
+# Удаление записи блога
+@app.route('/delete-blog-post/<int:post_id>', methods=['GET', 'POST'])
+def delete_blog_post(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    current_user = Users.query.filter_by(email=session['name']).first()
+    if current_user.root != 1 and current_user.id != post.author_id:
+        flash('У вас нет прав для удаления этой записи', 'danger')
+        return redirect(url_for('blog_post', post_id=post_id))
+    
+    # Удаляем изображение
+    image_path = os.path.join("static/img/upload/", post.image_name)
+    if os.path.exists(image_path):
+        os.remove(image_path)
+    
+    db.session.delete(post)
+    db.session.commit()
+    
+    flash('Запись успешно удалена', 'success')
+    return redirect(url_for('blog'))
+
+# Добавление комментария
+@app.route('/add-comment/<int:post_id>', methods=['POST'])
+def add_comment(post_id):
+    text = request.form.get('comment')
+    if not text:
+        flash('Комментарий не может быть пустым', 'danger')
+        return redirect(url_for('blog_post', post_id=post_id))
+    current_user = Users.query.filter_by(email=session['name']).first()
+    new_comment = Comment(
+        text=text,
+        user_id=current_user.id,
+        post_id=post_id
+    )
+    
+    db.session.add(new_comment)
+    db.session.commit()
+    
+    flash('Комментарий успешно добавлен', 'success')
+    return redirect(url_for('blog_post', post_id=post_id))
+
+# Удаление комментария
+@app.route('/delete-comment/<int:comment_id>', methods=['GET', 'POST'])
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    post_id = comment.post_id
+    current_user = Users.query.filter_by(email=session['name']).first()
+    if current_user.root != 1 and current_user.id != comment.user_id:
+        flash('У вас нет прав для удаления этого комментария', 'danger')
+        return redirect(url_for('blog_post', post_id=post_id))
+    
+    db.session.delete(comment)
+    db.session.commit()
+    
+    flash('Комментарий успешно удален', 'success')
+    return redirect(url_for('blog_post', post_id=post_id))
 
 
 @app.route('/catalog', methods=['GET', 'POST'])
