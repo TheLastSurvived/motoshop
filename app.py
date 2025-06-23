@@ -1,3 +1,7 @@
+"""
+Импорт всех неообходимых библиотек
+"""
+
 from flask import Flask, render_template, request, flash, redirect, session, url_for, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_ckeditor import CKEditor
@@ -15,6 +19,9 @@ from flask_migrate import Migrate
 import os
 
 
+"""
+Конфигурация проекта
+"""
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -26,6 +33,8 @@ db = SQLAlchemy(app)
 ckeditor = CKEditor(app)
 migrate = Migrate(app, db)
 
+
+#Таблица пользователей
 class Users(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     name = db.Column(db.String(100))
@@ -40,7 +49,7 @@ class Users(db.Model):
     def __repr__(self):
         return 'User %r' % self.id 
     
-
+# Галерея картинок товаров
 class ArticleImages(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_article = db.Column(db.Integer, db.ForeignKey('articles.id'))
@@ -50,7 +59,7 @@ class ArticleImages(db.Model):
     def __repr__(self):
         return f'<ArticleImage {self.id} for article {self.id_article}>'
     
-    
+# Таблица Товаров    
 class Articles(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     title = db.Column(db.String(100))
@@ -73,7 +82,7 @@ class Articles(db.Model):
             return 0
         return sum(r.rating for r in ratings) / len(ratings)
     
-
+# таблица Услуги
 class Services(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     title = db.Column(db.String(100))
@@ -82,7 +91,7 @@ class Services(db.Model):
     def __repr__(self):
         return 'Services %r' % self.id
     
-    
+# Таблица заказов    
 class Orders(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     id_user = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -96,7 +105,7 @@ class Orders(db.Model):
     def __repr__(self):
         return 'Orders %r' % self.id 
     
-
+# Таблица 
 class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -109,7 +118,7 @@ class Feedback(db.Model):
     def __repr__(self):
         return f'<Feedback {self.id} from {self.name}>'
     
-
+# Таблица оценок товаров
 class Ratings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_user = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -120,7 +129,7 @@ class Ratings(db.Model):
     def __repr__(self):
         return f'<Rating {self.rating} stars for article {self.id_article}>'
 
-
+# Таблица записей блога
 class BlogPost(db.Model):
     __tablename__ = 'blog_posts'
     id = db.Column(db.Integer, primary_key=True)
@@ -155,7 +164,7 @@ class Comment(db.Model):
     def user_name(self):
         return self.user.name if self.user else 'Аноним'
 
-    
+# настройка админки    
 class AdminIndex(AdminIndexView):
     @expose('/', methods=['GET', 'POST'])
     def index(self):
@@ -172,25 +181,31 @@ class AdminIndex(AdminIndexView):
 
 admin = Admin(app, name='MotoShop',index_view=AdminIndex(), template_mode='bootstrap3')
 
+# Определение полей отображаемых в админке для таблица заказов
 class OrdersView(ModelView):
     column_display_pk = True 
     column_hide_backrefs = False
     column_list = ['id_user','id_article', 'address', 'date']
 
-
+# Добавляем таблица для отображения в админке
 admin.add_view(ModelView(Users, db.session))
 admin.add_view(ModelView(Articles, db.session))
+admin.add_view(ModelView(ArticleImages, db.session))
+admin.add_view(ModelView(Services, db.session))
 admin.add_view(ModelView(Feedback, db.session))
 admin.add_view(OrdersView(Orders, db.session))
+admin.add_view(ModelView(Ratings, db.session))
+admin.add_view(ModelView(BlogPost, db.session))
+admin.add_view(ModelView(Comment, db.session))
 
-    
+# главная страница   
 @app.route('/', methods=['GET', 'POST'])
 def index():
     popular_blog_posts = BlogPost.query.order_by(BlogPost.views.desc()).limit(3).all()
     random_articles = Articles.query.order_by(func.random()).limit(4).all()
     return render_template("index.html",random_articles=random_articles, popular_blog_posts=popular_blog_posts)
 
-
+# страница блога
 @app.route('/blog', methods=['GET', 'POST'])
 def blog(): 
     page = request.args.get('page', 1, type=int)
@@ -243,7 +258,7 @@ def blog():
                          popular_posts=popular_posts,
                          category_counts=category_counts)
 
-
+# запись блога
 @app.route('/blog/<int:post_id>')
 def blog_post(post_id):
     post = BlogPost.query.get_or_404(post_id)
@@ -424,7 +439,7 @@ def delete_comment(comment_id):
     flash('Комментарий успешно удален', 'success')
     return redirect(url_for('blog_post', post_id=post_id))
 
-
+# страница каталога
 @app.route('/catalog', methods=['GET', 'POST'])
 def catalog(): 
     max_price_placeholder = db.session.query(func.max(Articles.price)).scalar()
@@ -527,7 +542,7 @@ def search():
     return render_template("catalog.html",search=0,articles=articles)
 '''
 
-
+# функция отвечающая за оценку пользователя
 @app.route('/rate-article/<int:article_id>', methods=['POST'])
 def rate_article(article_id):
     if 'name' not in session:
@@ -569,7 +584,7 @@ def rate_article(article_id):
     
     return redirect('/profile')
 
-
+# страница товара
 @app.route('/article/<int:id>', methods=['GET', 'POST'])
 def article(id):
     article = Articles.query.get(id)
@@ -619,11 +634,14 @@ def article(id):
     article.gallery_images = sorted(article.gallery_images, key=lambda x: x.order)
     return render_template("article.html", article=article)
 
+
+# функция проверяет расширение файлов картинок
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# функция удаления фото из галереии на странице товара
 @app.route('/delete-gallery-image/<int:id>')
 def delete_gallery_image(id):
     if not 'name' in session:
@@ -642,6 +660,7 @@ def delete_gallery_image(id):
     abort(404)
 
 
+# изменения статуса отправленного пользователем сообщения со страниц о нас или контакты. Таблица с сообщениями находится в админке
 @app.route('/change_status/<int:id>', methods=['GET', 'POST'])
 def change_status(id):
     if not 'name' in session:
@@ -653,6 +672,7 @@ def change_status(id):
     return redirect('/admin')
 
 
+# удаление записи
 @app.route('/delete-article/<int:id>')
 def delete_article(id):
     obj = Articles.query.filter_by(id=id).first()
@@ -662,6 +682,7 @@ def delete_article(id):
     return redirect('/catalog')
 
 
+# удаление заказа в профиле
 @app.route('/delete-order/<int:id>')
 def delete_order(id):
     obj = Orders.query.filter_by(id=id).first()
@@ -671,6 +692,7 @@ def delete_order(id):
     return redirect('/profile')
 
 
+# функция добавлния заказа в корзину
 @app.route('/add-order/<int:id_user>/<int:id_article>', methods=['POST'])
 def add_order(id_user, id_article):
     article = Articles.query.get(id_article)
@@ -706,6 +728,8 @@ def add_order(id_user, id_article):
         else:
             return redirect('/profile')
 
+
+# обработчик формы обновления профиля
 @app.route('/update-profile', methods=['POST'])
 def update_profile():
     if not 'name' in session:
@@ -743,30 +767,37 @@ def update_profile():
     
     return redirect('/profile')
 
+
+# перенаправление
 @app.route('/redirected<link><int:id_article>')
 def redirected(link,id_article):
     return render_template("redirected.html",link=link,id_article=id_article)
 
 
+# страница о нас
 @app.route('/about')
 def about():
     return render_template("about.html")
 
+
+#страница контактов
 @app.route('/contacts')
 def contacts():
     return render_template("contacts.html")
 
 
+# страница услуги
 @app.route('/services/<int:id>')
 def services(id):
     service = Services.query.get(id)
     return render_template("services.html",service=service)
 
 
+# функция проверяющая строку на принадлежность к белорусскому номеру
 def validate_belarus_phone(phone):
     return re.fullmatch(r'375\d{9}', phone)
 
-
+#обработчик формы на страницах услуг и контакты
 @app.route('/send_feedback', methods=[ 'POST'])
 def send_feedback():
     if request.method == 'POST':
@@ -801,7 +832,7 @@ def send_feedback():
             app.logger.error(f'Error saving feedback: {str(e)}')
     return redirect(request.referrer or url_for('fallback_route'))
     
-
+# страница профиля
 @app.route('/profile')
 def profile():
     if not 'name' in session:
@@ -818,7 +849,7 @@ def profile():
     
     return render_template("profile.html", orders=orders)
 
-
+#вход
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     session.pop('name', None)
@@ -834,7 +865,7 @@ def login():
             return redirect(url_for("login"))
     return render_template("login.html")
 
-
+#регистрация
 @app.route('/reg', methods=['GET', 'POST'])
 def reg():
     if request.method == 'POST':
@@ -853,6 +884,13 @@ def reg():
             db.session.rollback()
             return redirect(url_for("reg"))
     return render_template("reg.html")
+
+
+"""
+Все функции с context_processor позволяют получить какие-либо значения без перехода на страницу
+Типо как глобальные переменные
+"""
+
 
 @app.context_processor
 def inject_user():
@@ -898,27 +936,28 @@ def inject_custom_css():
     return dict(
         admin_css_url='/static/css/custom_admin.css'  
     )
-
+# страница 404
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
 
-
+# ттраница 403
 @app.errorhandler(403)
 def forbidded(e):
     return render_template('403.html'), 403
 
-
+# страница 401
 @app.errorhandler(401)
 def forbidded(e):
     return render_template('401.html'), 401
 
-
+# разлогиниться
 @app.route('/logout')
 def logout():
     session.pop('name', None)
     return redirect('/')
 
 
+#Запуск проекта
 if __name__ == '__main__':
     app.run(debug=True)
