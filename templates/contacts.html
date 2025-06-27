@@ -17,7 +17,13 @@
     <h1 class="text-center mb-4">Контакты</h1>
 
 
-
+  {% with messages = get_flashed_messages(True) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <p class=" flash {{category}}">{{message}}</p>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
     <div class="row">
       
 
@@ -31,25 +37,19 @@
                 </div>
                 <div class="mb-3">
                     <label for="phone" class="form-label">Телефон</label>
-                    <input type="tel" class="form-control" id="phone" name="phone" pattern="+375[0-9]{9}" placeholder="+375XXXXXXXXX" required>
+                    <input type="tel" class="form-control" id="phone" name="phone" pattern="375[0-9]{9}" placeholder="375XXXXXXXXX" required>
                   </div>
                
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" id="email" placeholder="example@mail.ru" required>
+                    <input type="email" class="form-control" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" name="email" id="email" placeholder="example@mail.ru" required>
                 </div>
                 <div class="mb-3">
                     <label for="message" class="form-label">Сообщение</label>
                     <textarea class="form-control" id="message" name="message" rows="5" placeholder="Ваше сообщение..." required></textarea>
                 </div>
                 <button type="submit" class="btn btn-dark">Отправить</button>
-                {% with messages = get_flashed_messages(True) %}
-                {% if messages %}
-                {% for category, message in messages %}
-                <p class="m-2 flash {{category}}">{{message}}</p>
-                {% endfor %}
-                {% endif %}
-                {% endwith %}
+              
             </form>
         </div>
 

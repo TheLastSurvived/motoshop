@@ -32,6 +32,7 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 db = SQLAlchemy(app)
 ckeditor = CKEditor(app)
 migrate = Migrate(app, db)
+app.config['FLASK_ADMIN_SWATCH'] = 'journal'
 
 
 #Таблица пользователей
@@ -180,6 +181,8 @@ class AdminIndex(AdminIndexView):
 
 
 admin = Admin(app, name='MotoShop',index_view=AdminIndex(), template_mode='bootstrap3')
+
+
 
 # Определение полей отображаемых в админке для таблица заказов
 class OrdersView(ModelView):
@@ -797,6 +800,11 @@ def services(id):
 def validate_belarus_phone(phone):
     return re.fullmatch(r'375\d{9}', phone)
 
+def validate_email(email):
+    """Проверяет корректность email адреса"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
 #обработчик формы на страницах услуг и контакты
 @app.route('/send_feedback', methods=[ 'POST'])
 def send_feedback():
@@ -808,11 +816,15 @@ def send_feedback():
 
 
         if not all([name, phone, email, message]):
-            flash('Все поля обязательны для заполнения', 'error')
+            flash('Все поля обязательны для заполнения', 'bad')
+            return redirect(request.referrer or url_for('index'))
+        
+        if not validate_email(email):
+            flash('Некорректный email адрес', 'bad')
             return redirect(request.referrer or url_for('index'))
 
         if not validate_belarus_phone(phone):
-            flash('Номер телефона должен быть в формате 375XXXXXXXXX', 'error')
+            flash('Номер телефона должен быть в формате 375XXXXXXXXX', 'bad')
             return redirect(request.referrer or url_for('index'))
 
        
@@ -856,6 +868,12 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = md5(request.form.get('password').encode()).hexdigest()
+
+        # Валидация email
+        if not validate_email(email):
+            flash("Некорректный email адрес!", category="danger")
+            return redirect(url_for("login"))
+
         user = Users.query.filter_by(email=email,password=password).first()
         if user:
             session['name'] = Users.query.filter_by(email=email).first().email
@@ -874,6 +892,12 @@ def reg():
             surname = request.form.get('name')
             email = request.form.get('email')
             password = request.form.get('password')
+
+            # Валидация email
+            if not validate_email(email):
+                flash("Некорректный email адрес!", category="danger")
+                return redirect(url_for("reg"))
+            
             user = Users(name=name,surname=surname,email=email,password=md5(password.encode()).hexdigest())
             db.session.add(user)
             db.session.commit()
