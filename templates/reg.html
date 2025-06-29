@@ -45,14 +45,15 @@
                   <label class="form-label fw-bold">Имя</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control" placeholder="Ваше имя" name="name" required>
+                    <input type="text" class="form-control" pattern="[A-Za-zА-Яа-яЁё\s\-]+" title="Пожалуйста, вводите только буквы (допускаются пробелы и дефисы)" placeholder="Ваше имя" name="name" required>
                   </div>
                 </div>
                 <div class="col-md-6 mb-3">
                   <label class="form-label fw-bold">Фамилия</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control" placeholder="Ваша фамилия" name="surname" required>
+                    <input type="text" class="form-control" pattern="[A-Za-zА-Яа-яЁё\s\-]+" 
+                    title="Пожалуйста, вводите только буквы (допускаются пробелы и дефисы)" placeholder="Ваша фамилия" name="surname" required>
                   </div>
                 </div>
               </div>
@@ -124,4 +125,34 @@ document.querySelectorAll('.toggle-password').forEach(button => {
   })
 })()
 </script>
+
+<script>
+  // Запрет ввода цифр и специальных символов (кроме пробела и дефиса) в полях имени и фамилии
+  document.querySelectorAll('input[name="name"], input[name="surname"]').forEach(input => {
+    input.addEventListener('input', function() {
+      this.value = this.value.replace(/[^A-Za-zА-Яа-яЁё\s\-]/g, '');
+    });
+    
+    input.addEventListener('keydown', function(e) {
+      // Разрешаем: backspace, delete, tab, escape, enter, стрелки
+      if ([46, 8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 || 
+          (e.keyCode === 65 && e.ctrlKey === true) || // Ctrl+A
+          (e.keyCode === 67 && e.ctrlKey === true) || // Ctrl+C
+          (e.keyCode === 86 && e.ctrlKey === true) || // Ctrl+V
+          (e.keyCode === 88 && e.ctrlKey === true) || // Ctrl+X
+          (e.keyCode >= 35 && e.keyCode <= 39)) { // Home, End, Left, Right
+        return;
+      }
+      
+      // Запрещаем цифры и специальные символы (кроме пробела и дефиса)
+      if ((e.shiftKey || (e.keyCode < 65 || e.keyCode > 90)) && 
+          (e.keyCode < 106 || e.keyCode > 111) && 
+          (e.keyCode < 186 || e.keyCode > 192) && 
+          (e.keyCode < 219 || e.keyCode > 222) && 
+          e.keyCode !== 32 && e.keyCode !== 189 && e.keyCode !== 173) {
+        e.preventDefault();
+      }
+    });
+  });
+  </script>
 {% endblock %}
